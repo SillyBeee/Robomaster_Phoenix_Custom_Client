@@ -1,14 +1,61 @@
 import { AboutSlint, VerticalBox } from "std-widgets.slint";
+import {MainMenu} from "main_menu.slint";
+component SplashScreen inherits Rectangle{
+    Image{
+        width: 100%;
+        height: 100%;
+        source: @image-url("images/logo_dark.png");  
+    }
+}
 
 export component MainWindow inherits Window {
     title: "RoboMaster Custom Client";
     full-screen: false;
-    VerticalBox {
-        Text {
-            text: "Hello World!";
+    width: 1600px;
+    height: 900px;
+    background: #000000; // 1. 窗口背景纯黑
+
+    // 2. 定义两个独立的透明度变量
+    property <float> splash-opacity: 0.0; // 初始为0 (黑)
+    property <float> menu-opacity: 0.0;   // 初始为0 (黑)
+
+    // 3. 主菜单 (在底层)
+    MainMenu {
+        opacity: root.menu-opacity;
+        visible: root.menu-opacity > 0; // 性能优化
+        animate opacity { duration: 1000ms; easing: ease-in-out; }
+    }
+
+    // 4. 启动页 (在上层)
+    SplashScreen {
+        opacity: root.splash-opacity;
+        visible: root.splash-opacity > 0;
+        animate opacity { duration: 1000ms; easing: ease-in-out; }
+    }
+
+
+    
+    // 步骤 A: 启动后稍微等待一下，然后让 Logo 淡入
+    step1-timer := Timer {
+        interval: 200ms;
+        triggered() => {
+            root.splash-opacity = 1.0; // Logo 变亮
+            step1-timer.stop();        // 任务完成，停止计时
+            step2-timer.start();       // 启动下一步的倒计时
         }
-        AboutSlint {
-            preferred-height: 150px;
+    }
+
+    // 步骤 B: Logo 显示几秒后，执行切换
+    step2-timer := Timer {
+        interval: 1500ms; // Logo 停留时间
+        triggered() => {
+            root.splash-opacity = 0.0; // Logo 变暗
+            root.menu-opacity = 1.0;   // 菜单 变亮
+            step2-timer.stop();
         }
+    }
+
+    init => {
+        step1-timer.start();
     }
 }
