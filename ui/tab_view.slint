@@ -1,0 +1,56 @@
+import { VerticalBox } from "std-widgets.slint";
+
+export component TabView inherits Rectangle {
+    // 1. 核心属性：控制当前显示第几页
+    in property <int> current-index: 0;
+
+
+    // 页面 0: 仪表盘
+    if root.current-index == 0 : Rectangle {
+        background: #1e1e1e; // 深色背景
+        Text { 
+            text: "仪表盘 (Dashboard)"; 
+            color: white; 
+            font-size: 24px; 
+            x: 20px; y: 20px;
+        }
+        // 这里可以放更多仪表盘组件...
+    }
+
+    // 页面 1: 系统设置
+    if root.current-index == 1 : Rectangle {
+        background: #252526;
+        VerticalBox {
+            alignment: start;
+            padding: 20px;
+            Text { text: "系统设置"; color: white; font-size: 24px; }
+            Rectangle { height: 20px; } // Spacer
+            Text { text: "连接端口: /dev/ttyUSB0"; color: #aaa; }
+            Text { text: "波特率: 115200"; color: #aaa; }
+        }
+    }
+
+    // 页面 2: 关于
+    if root.current-index == 2 : Rectangle {
+        background: #1e1e1e;
+        Text { 
+            text: "关于 RoboMaster Client v1.0"; 
+            color: white; 
+            font-size: 24px; 
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+    
+    // 3. 切换动画 (可选)
+    // 如果想要淡入淡出效果，不能用 if，得用 opacity 控制
+    /* 
+    Rectangle {
+        opacity: root.current-index == 0 ? 1.0 : 0.0;
+        visible: opacity > 0;
+        animate opacity { duration: 200ms; }
+        // ... 页面 0 内容 ...
+    }
+    */
+}
+
