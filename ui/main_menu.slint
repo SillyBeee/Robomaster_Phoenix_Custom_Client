@@ -22,14 +22,10 @@ export component MainMenu inherits Rectangle {
         x: 0px;
         y: 0px;
         
-        // 3. SideBar 的选中状态也绑定到主状态
+        // SideBar 的选中状态也绑定到主状态
         active-index: root.current-page;
 
-        // 4. 点击回调只负责更新主状态
-        // 由于我们在 SideBar 内部已经写了点击时更新 active-index，
-        // 这里其实主要用于处理页面切换逻辑，或者如果 SideBar 是纯展示组件，则必须在这里更新。
-        // 配合第一步的 SideBar 修改，下面的回调其实可以简化，
-        // 但为了逻辑清晰，我们显式地赋值。
+   
         
         dashboard-clicked => {
             root.current-page = 0;

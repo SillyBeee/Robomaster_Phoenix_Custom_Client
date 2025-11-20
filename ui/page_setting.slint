@@ -1,0 +1,16 @@
+import { VerticalBox } from "std-widgets.slint";
+export component Page_Setting inherits Rectangle {
+    width: 100%;
+    height: 100%;
+    background: #252526;
+
+    VerticalBox {
+        alignment: start;
+        padding: 20px;
+        Text { text: "系统设置"; color: white; font-size: 24px; }
+        Rectangle { height: 20px; } // Spacer
+        Text { text: "连接端口: /dev/ttyUSB0"; color: #aaa; }
+        Text { text: "波特率: 115200"; color: #aaa; }
+    }
+    
+}
