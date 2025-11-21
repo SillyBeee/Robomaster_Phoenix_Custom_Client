@@ -3,7 +3,7 @@ project(RM_Client CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) 
 
 find_package(Slint QUIET)
 if (NOT Slint_FOUND)
@@ -20,7 +20,10 @@ if (NOT Slint_FOUND)
   FetchContent_MakeAvailable(Slint)
 endif (NOT Slint_FOUND)
 
-add_executable(RM_Client src/main.cpp)
+include_directories(include)
+file(GLOB SOURCES "src/*.cpp")
+
+add_executable(RM_Client src/main.cpp ${SOURCES})
 slint_target_sources(RM_Client ui/app-window.slint)
 target_link_libraries(RM_Client PRIVATE Slint::Slint)
 

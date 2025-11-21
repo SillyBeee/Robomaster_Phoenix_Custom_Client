@@ -1,9 +1,10 @@
+import {Callback_Factory} from "callback_factory.slint";
 export component Page_About inherits Rectangle {
     callback open_url(string);
 
     width: 100%;
     height: 100%;
-    background: @linear-gradient(180deg, #05124c 0%, #080114 100%);
+    background: @linear-gradient(180deg, #5c6175 0%, #080114 100%);
 
     Image {
         source: @image-url("images/phoenix.png");
@@ -27,22 +28,57 @@ export component Page_About inherits Rectangle {
 
 
     Text { 
-        text: "关于 RoboMaster Client v0.1 \n  Made With Slint"; 
-        color: area.has-hover ? #4da6ff : white;
+        text: "关于 RoboMaster Client v0.1 "; 
+        color: area_client.has-hover ? #4da6ff : white;
         font-size: 24px; 
         horizontal-alignment: center;
         vertical-alignment: center;
 
-        area := TouchArea {
+        area_client := TouchArea {
             width: 100%;
             height: 100%;
             mouse-cursor: pointer; // 鼠标变成手型
             clicked => {
                 // 触发回调，传递 URL
-                root.open-url("https://www.robomaster.com");
+                Callback_Factory.open-url("https://github.com/SillyBeee/Robomaster_Phoenix_Custom_Client");
             }
         }
     }
+
+    Text { 
+        text: " Made With Slint"; 
+        color:  area_slint.has-hover ? #4da6ff : white;
+        font-size: 24px; 
+        x: (parent.width - self.width) / 2;
+        y: (parent.height) / 2 + 60px;
+        area_slint := TouchArea {
+            width: 100%;
+            height: 100%;
+            mouse-cursor: pointer; // 鼠标变成手型
+            clicked => {
+                // 触发回调，传递 URL
+                Callback_Factory.open-url("https://slint.dev/");
+            }
+        }
+    }
+
+    Text { 
+        text: " Copyright (c) 2025 HDU—PHOENIX "; 
+        color:  area_phoenix.has-hover ? #4da6ff : white;
+        font-size: 24px; 
+        x: (parent.width - self.width) / 2;
+        y: (parent.height) / 2 + 20px;
+        area_phoenix := TouchArea {
+            width: 100%;
+            height: 100%;
+            mouse-cursor: pointer; // 鼠标变成手型
+            clicked => {
+                // 触发回调，传递 URL
+                Callback_Factory.open-url("https://github.com/HDU-PHOENIX");
+            }
+        }
+    }
+
 
     
     

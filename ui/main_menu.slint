@@ -1,17 +1,12 @@
 import {SideBar} from "side_bar.slint";
 import {TabView} from "tab_view.slint";
-
+import { Callback_Factory, Callback-Factory } from "callback_factory.slint";
 export component MainMenu inherits Rectangle {
     width: 100%;
     height: 100%;
     background: white;
 
-    // 1. 定义一个主状态，统一管理当前页面索引
-    property <int> current-page: 0;
-
     tabview := TabView {
-        // 2. TabView 绑定到主状态
-        current-index: root.current-page;
         x: 0px;
         y: 0px;
         width: parent.width;
@@ -21,21 +16,6 @@ export component MainMenu inherits Rectangle {
     sidebar := SideBar {
         x: 0px;
         y: 0px;
-        
-        // SideBar 的选中状态也绑定到主状态
-        active-index: root.current-page;
-
-   
-        
-        dashboard-clicked => {
-            root.current-page = 0;
-        }
-        settings-clicked => {
-            root.current-page = 1;
-        }
-        about-clicked => {
-            root.current-page = 2;
-        }
     }
 }
 
