@@ -6,7 +6,7 @@
 
 ## 📋 项目简介
 
-RoboMaster Phoenix Custom Client 是一个基于 **Slint** 框架开发的跨平台图形化自定义客户端，用于控制和监测 RoboMaster 机器人。该项目采用现代化的 UI 设计，提供直观的用户界面和高效的通信接口。
+RoboMaster Phoenix Custom Client 是一个基于 **[Slint](https://github.com/slint-ui/slint)** 框架开发的跨平台图形化自定义客户端，用于控制和监测 RoboMaster 机器人。该项目采用现代化的 UI 设计，提供直观的用户界面和高效的通信接口。
 
 ## 🏗️ 项目结构
 
@@ -36,8 +36,15 @@ Robomaster_Phoenix_Custom_Client/
 
 ## 🚀 快速开始
 
+**Debain/Ubuntu**
 
-```bash
+```sh
+# 依赖安装
+sudo apt update
+sudo apt install qt6-base-dev  libqt6gui6 libqt6widgets6
+```
+
+```sh
 # 克隆项目
 git clone https://github.com/SillyBeee/Robomaster_Phoenix_Custom_Client
 cd Robomaster_Phoenix_Custom_Client
@@ -69,6 +76,8 @@ cmake --build build
 
 
 ## 📄 许可证
+
+This application uses Slint, licensed under the Slint [Royalty-Free License](https://github.com/slint-ui/slint/blob/master/LICENSES/LicenseRef-Slint-Royalty-free-2.0.md).
 
 本项目采用 GPLv3 许可证。详见 [LICENSE](LICENSE) 文件。
 
