@@ -7,10 +7,10 @@ export component Page_About inherits Rectangle {
     background: @linear-gradient(180deg, #5c6175 0%, #080114 100%);
 
     Image {
-        source: @image-url("images/phoenix.png");
+        source: @image-url("images/phoenix.svg");
         image-fit: contain;
-        width: 600px;
-        height: 400px;
+        width: 1200px;
+        height: 1200px;
         x: (parent.width - self.width) / 2 -100px; 
         
         // 垂直居中，并向上偏移 60px (为下方的文字留出空间)
@@ -18,12 +18,12 @@ export component Page_About inherits Rectangle {
     }
 
     Image{
-        source: @image-url("images/R.png");
+        source: @image-url("images/R.svg");
         image-fit: contain;
-        width: 200px;
-        height: 200px;
+        width: 1000px;
+        height: 1000px;
         x: (parent.width - self.width) / 2 + 100px; 
-        y: (parent.height - self.height) / 2 - 150px;
+        y: (parent.height - self.height) / 2 - 135px;
     }
 
 

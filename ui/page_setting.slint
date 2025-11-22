@@ -18,7 +18,7 @@ export component Page_Setting inherits Rectangle {
     ComboBox {
         width: 200px;
         height: 30px;
-        model: [ "1920x1080", "2560x1440", "3840x2160" ];
+        model: [ "1920x1080", "2560x1440", "2560x1600", "3840x2160" ];
         current-index: Callback_Factory.current-resolution-index;
         selected(current-value) => {
             Callback_Factory.set_resolution(current-value);
