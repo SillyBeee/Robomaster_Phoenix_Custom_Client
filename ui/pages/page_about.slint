@@ -1,4 +1,5 @@
-import {Callback_Factory} from "callback_factory.slint";
+import {Callback_Factory} from "../callback_factory.slint";
+import { AboutSlint } from "std-widgets.slint";
 export component Page_About inherits Rectangle {
     callback open_url(string);
 
@@ -7,18 +8,16 @@ export component Page_About inherits Rectangle {
     background: @linear-gradient(180deg, #5c6175 0%, #080114 100%);
 
     Image {
-        source: @image-url("images/phoenix.svg");
+        source: @image-url("../images/phoenix.svg");
         image-fit: contain;
         width: 1200px;
         height: 1200px;
         x: (parent.width - self.width) / 2 -80px; 
-        
-        // 垂直居中，并向上偏移 60px (为下方的文字留出空间)
         y: (parent.height - self.height) / 2 - 130px; 
     }
 
     Image{
-        source: @image-url("images/R.svg");
+        source: @image-url("../images/R.svg");
         image-fit: contain;
         width: 1000px;
         height: 1000px;
@@ -45,22 +44,14 @@ export component Page_About inherits Rectangle {
         }
     }
 
-    Text { 
-        text: " Made With Slint"; 
-        color:  area_slint.has-hover ? #4da6ff : white;
-        font-size: Callback-Factory.font_size*1px;
+
+    AboutSlint {
         x: (parent.width - self.width) / 2;
         y: (parent.height) / 2 + 60px;
-        area_slint := TouchArea {
-            width: 100%;
-            height: 100%;
-            mouse-cursor: pointer; // 鼠标变成手型
-            clicked => {
-                // 触发回调，传递 URL
-                Callback_Factory.open-url("https://slint.dev/");
-            }
-        }
+        width: 300px;
+        height: 90px;
     }
+
 
     Text { 
         text: " Copyright (c) 2025 HDU—PHOENIX "; 

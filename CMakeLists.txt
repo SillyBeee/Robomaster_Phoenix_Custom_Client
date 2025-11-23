@@ -29,8 +29,10 @@ include_directories(include/drivers)
 include_directories(include/utils)
 file(GLOB SOURCES "src/*.cpp" "src/drivers/*.cpp" "src/utils/*.cpp")
 
+
 add_executable(RM_Client src/main.cpp ${SOURCES})
 slint_target_sources(RM_Client ui/app-window.slint)
+
 target_link_libraries(RM_Client PRIVATE Slint::Slint)
 
 

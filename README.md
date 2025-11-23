@@ -40,8 +40,8 @@ Robomaster_Phoenix_Custom_Client/
 
 ```sh
 # 依赖安装
-sudo apt update
-sudo apt install qt6-base-dev  libqt6gui6 libqt6widgets6
+//其实不推荐使用release预编译二进制文件安装,qt后端疑似有点问题，建议自行编译安装slint
+sudo bash ./scripts/setup.bash
 ```
 
 ```sh
@@ -51,10 +51,12 @@ cd Robomaster_Phoenix_Custom_Client
 
 # 编译
 mkdir build
-cmake --build build
+cd build
+cmake ..
+make
 
 # 运行程序
-./build/RM_Client
+./RM_Client
 ```
 
 ## 🛠️ 开发指南

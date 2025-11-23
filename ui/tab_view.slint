@@ -1,16 +1,20 @@
 import { VerticalBox } from "std-widgets.slint";
-import { Page_Setting } from "page_setting.slint";
-import { Page_DashBoard } from "page_dashboard.slint";
-import { Page_About } from "page_about.slint";
+import { Page_Setting } from "pages/page_setting.slint";
+import { Page_DashBoard } from "pages/page_dashboard.slint";
+import { Page_About } from "pages/page_about.slint";
+import { Page_Design } from "pages/page_design.slint";
 import { Callback_Factory, Callback-Factory } from "callback_factory.slint";
+
 export component TabView inherits Rectangle {
-    // 页面 0: 仪表盘
+
     if Callback-Factory.current-index == 0 : Page_DashBoard {}
 
-    // 页面 1: 系统设置
-    if Callback-Factory.current-index == 1 : Page_Setting {}
+    if Callback-Factory.current-index == 1 : Page_Design {}
 
-    // 页面 2: 关于
-    if Callback-Factory.current-index == 2 : Page_About {}
+
+    if Callback-Factory.current-index == 2 : Page_Setting {}
+
+
+    if Callback-Factory.current-index == 3 : Page_About {}
 }
 

@@ -30,8 +30,8 @@ component SideBarItem inherits Rectangle {
     }
 
     HorizontalLayout {
-        padding-left: parent.width * 0.1;
-        padding-right: parent.width * 0.1;
+        padding-left: parent.width * 0.05;
+        padding-right: parent.width * 0.05;
         spacing: parent.width * 0.05;
 
         Image {
@@ -54,8 +54,8 @@ component SideBarItem inherits Rectangle {
 }
 
 export component SideBar inherits Rectangle {
-    out property <length> collapsed-width: 60px;
-    out property <length> expanded-width: 250px;
+    out property <length> collapsed-width: 45px;
+    out property <length> expanded-width: 200px;
     out property <bool> is_expanded: false;
 
     height: 100%;
@@ -75,7 +75,7 @@ export component SideBar inherits Rectangle {
 
     VerticalBox {
         padding: 10px;
-        padding-top: 50px;
+        padding-top: 20px;
         spacing: 10px;
         z: 1; // 放在上层
         
@@ -102,10 +102,17 @@ export component SideBar inherits Rectangle {
             
         }
         
+        item-design := SideBarItem {
+            icon: @image-url("icons/design.svg");
+            text: "Design";
+            index: 1;
+            show_text: root.is_expanded;
+        }
+
         item-settings := SideBarItem {
             icon: @image-url("icons/setting.svg");
             text: "Settings";
-            index: 1;
+            index: 2;
             show_text: root.is_expanded;
         }
         
@@ -114,7 +121,7 @@ export component SideBar inherits Rectangle {
         item-about := SideBarItem {
             icon: @image-url("icons/about.svg");
             text: "About";
-            index: 2;
+            index: 3;
             show_text: root.is_expanded;
         }
     }

@@ -11,6 +11,11 @@ component SplashScreen inherits Rectangle{
 }
 
 export component MainWindow inherits Window {
+    in-out property <length> window-width: 900px;
+    in-out property <length> window-height: 540px;
+    property <float> splash-opacity: 0.0; // 初始为0 (黑)
+    property <float> menu-opacity: 0.0;   // 初始为0 (黑)
+    in-out property <bool> is_fullscreen: false;
     title: "RoboMaster Custom Client";
     full-screen: false;
     
@@ -18,12 +23,8 @@ export component MainWindow inherits Window {
     preferred-height: window-height;
     background: #000000; // 1. 窗口背景纯黑
 
-    // 2. 定义两个独立的透明度变量
-    property <float> splash-opacity: 0.0; // 初始为0 (黑)
-    property <float> menu-opacity: 0.0;   // 初始为0 (黑)
-    in-out property <bool> is_fullscreen: false;
-    in-out property <length> window-width: 860px;
-    in-out property <length> window-height: 540px;
+   
+    
 
     // 3. 主菜单 (在底层)
     MainMenu {
@@ -52,7 +53,7 @@ export component MainWindow inherits Window {
 
     // 步骤 B: Logo 显示几秒后，执行切换
     step2-timer := Timer {
-        interval: 1500ms; // Logo 停留时间
+        interval: 800ms; // Logo 停留时间
         triggered() => {
             root.splash-opacity = 0.0; // Logo 变暗
             root.menu-opacity = 1.0;   // 菜单 变亮
@@ -62,8 +63,6 @@ export component MainWindow inherits Window {
 
     init => {
         step1-timer.start();
-        let width_px = window-width / 1px;
-        let height_px = window-height / 1px;
-        Callback-Factory.set_resolution(width_px + "x" + height_px);
     }
+
 }

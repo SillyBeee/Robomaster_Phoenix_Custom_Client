@@ -30,8 +30,6 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
         width = std::stoi(res_str.substr(0, pos));
         height = std::stoi(res_str.substr(pos + 1));
         }
-        // window->set_window_height(height);
-        // window->set_window_width(width);
         if (width > 0 && height > 0) {
             slint::LogicalSize size{};
             size.width = float(width);
@@ -40,7 +38,7 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
             window->global<Callback_Factory>()
                 .set_font_size(std::min(float(width), float(height)) * 0.015f);
             std::cout<<"Set font size to: "<< std::min(float(width), float(height)) * 0.015f <<std::endl;
-            
+            std::cout << "Resolution set to: " << width << "x" << height << std::endl;
         }
     }
     catch (const std::exception& e) {
