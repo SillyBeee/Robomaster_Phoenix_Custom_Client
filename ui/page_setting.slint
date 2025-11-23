@@ -1,4 +1,4 @@
-import { VerticalBox, ComboBox } from "std-widgets.slint";
+import { VerticalBox, ComboBox, CheckBox } from "std-widgets.slint";
 import { Callback_Factory } from "callback_factory.slint";
 
 export component Page_Setting inherits Rectangle {
@@ -18,11 +18,22 @@ export component Page_Setting inherits Rectangle {
     ComboBox {
         width: 200px;
         height: 30px;
-        model: [ "1920x1080", "2560x1440", "2560x1600", "3840x2160" ];
+        model: [ "1600x900", "1920x1080", "2560x1440", "2560x1600", "3840x2160" ];
         current-index: Callback_Factory.current-resolution-index;
         selected(current-value) => {
             Callback_Factory.set_resolution(current-value);
             Callback_Factory.current-resolution-index = self.current-index;
+        }
+    }
+
+    CheckBox {
+        x: 20px;
+        y: 100px;
+        text: "全屏模式";
+        checked: Callback_Factory.is_fullscreen;
+        toggled() => {
+            Callback_Factory.set_fullscreen(self.checked);
+            Callback_Factory.is_fullscreen = self.checked;
         }
     }
     

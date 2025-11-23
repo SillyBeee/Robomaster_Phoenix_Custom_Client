@@ -1,10 +1,14 @@
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
 export global Callback_Factory{
     // 全局变量
-    in-out property <int> current-resolution-index: 0;
-    in-out property <int> current-index: 0;
+    in-out property <int> current-resolution-index: 0; // 当前分辨率索引
+    in-out property <int> current-index: 0;  //当前页索引
+    in-out property <bool> is_fullscreen: false; //当前是否全屏
+    in-out property <float> font_size: 14.0; //全局字体大小比例
+
     
     //全局回调
     callback open-url(string);
     callback set_resolution(string);
+    callback set_fullscreen(bool);
 }

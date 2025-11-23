@@ -1,14 +1,16 @@
 import { VerticalBox } from "std-widgets.slint";
-import { Callback_Factory, Callback-Factory, Callback-Factory } from "callback_factory.slint";
+import { Callback_Factory } from "callback_factory.slint";
+
 component SideBarItem inherits Rectangle {
     in property <string> text;
+    in property <image> icon: @image-url("images/default_icon.png");
+    in property <bool> show_text: false;
     in property <bool> selected: Callback-Factory.current-index == self.index;
     in property <int> index: 0;
     
-    out property <bool> has-hover: area.has-hover;
     
     width: 100%;
-    height: 70px; // 给个固定高度比较好控制
+    height: 8%; 
     
     background: area.has-hover ? 
         @linear-gradient(90deg, #ffffff25 0%, #ffffff05 100%) : // 悬停时：左侧亮一点，向右渐隐
@@ -21,43 +23,49 @@ component SideBarItem inherits Rectangle {
         width: 100%;
         height: 100%;
         clicked => {
-            Callback-Factory.current-index = root.index;
+            if(index!=-1){
+                Callback-Factory.current-index = root.index;
+            }
         }
     }
 
     HorizontalLayout {
-        padding-left: 20px;
-        padding-right: 20px;
-        spacing: 10px;
+        padding-left: parent.width * 0.1;
+        padding-right: parent.width * 0.1;
+        spacing: parent.width * 0.05;
+
+        Image {
+            source: root.icon;
+            image-fit: contain;
+            vertical-alignment: center;
+            height: 60%;
+            width: 22px;
+        }
 
         Text {
+            visible: root.show_text;
             text: root.text;
             color: white;
             vertical-alignment: center;
-            font-size: 23px;
+            font-size: Callback-Factory.font_size*1px;
             overflow: elide;
         }
     }
 }
 
 export component SideBar inherits Rectangle {
-    property <length> collapsed-width: 20px;
-    property <length> expanded-width: 250px;
-    property <bool> is-hovered: 
-        bg-touch.has-hover || 
-        item-dashboard.has-hover || 
-        item-settings.has-hover || 
-        item-about.has-hover;
+    out property <length> collapsed-width: 60px;
+    out property <length> expanded-width: 250px;
+    out property <bool> is_expanded: false;
 
     height: 100%;
     background: @linear-gradient(180deg, #24293c 0%, #1a1a1a 100%);
     clip: true; 
     
-    // 2. 关键修改：只要背景被悬停，或者任意一个按钮被悬停，都保持展开
-    // 注意：这里引用了下面定义的按钮 ID
+
     
 
-    width: is-hovered ? expanded-width : collapsed-width;
+    width: is_expanded ? expanded-width : collapsed-width;
 
     animate width { duration: 300ms; easing: ease-out-quart; }
 
@@ -65,48 +73,49 @@ export component SideBar inherits Rectangle {
     drop-shadow-color: #00000080;
     drop-shadow-offset-x: 2px;
 
-    // 背景感应区 (处理按钮之间的空隙)
-    bg-touch := TouchArea {
-        width: 100%;
-        height: 100%;
-        z: 0; // 放在最底层
-    }
-
-
     VerticalBox {
         padding: 10px;
         padding-top: 50px;
         spacing: 10px;
         z: 1; // 放在上层
         
-        opacity: root.width > 100px ? 1.0 : 0.0;
-        animate opacity { duration: 200ms; }
-
-        Text {
+        item-menu := SideBarItem {
+            icon: @image-url("icons/open.svg");
             text: "主菜单";
-            color: #f1f4fb;
-            font-size: 23px;
-            height: 40px;
+            index: -1; 
+            show_text: root.is_expanded;
+            TouchArea {
+                width: 100%;
+                height: 100%;
+                clicked => {
+                    root.is_expanded = !root.is_expanded;
+                }
+            }
         }
 
-        // 3. 给每个按钮添加 ID，以便上面引用它们的 has-hover 状态
+
         item-dashboard := SideBarItem {
+            icon: @image-url("icons/dashboard.svg");
             text: "Dashboard";
-            // 2. 修改：绑定 selected 状态到 active-index
             index: 0;
+            show_text: root.is_expanded;
             
         }
         
         item-settings := SideBarItem {
+            icon: @image-url("icons/setting.svg");
             text: "Settings";
             index: 1;
+            show_text: root.is_expanded;
         }
         
         Rectangle { vertical-stretch: 1; }
 
         item-about := SideBarItem {
+            icon: @image-url("icons/about.svg");
             text: "About";
             index: 2;
+            show_text: root.is_expanded;
         }
     }
 }

@@ -30,11 +30,28 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
         width = std::stoi(res_str.substr(0, pos));
         height = std::stoi(res_str.substr(pos + 1));
         }
-        window->set_window_height(height);
-        window->set_window_width(width);
+        // window->set_window_height(height);
+        // window->set_window_width(width);
+        if (width > 0 && height > 0) {
+            slint::LogicalSize size{};
+            size.width = float(width);
+            size.height = float(height);
+            window->window().set_size(size);
+            window->global<Callback_Factory>()
+                .set_font_size(std::min(float(width), float(height)) * 0.015f);
+            std::cout<<"Set font size to: "<< std::min(float(width), float(height)) * 0.015f <<std::endl;
+            
+        }
     }
     catch (const std::exception& e) {
             std::cerr << "Failed to parse resolution: " << e.what() << std::endl;
     }
+    
+}
+
+void callback_set_fullscreen(slint::ComponentHandle<MainWindow>& window, 
+                            bool is_fullscreen){
+    window->set_is_fullscreen(is_fullscreen);
+    window->window().set_fullscreen(is_fullscreen);
     
 }

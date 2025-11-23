@@ -11,10 +11,10 @@ export component Page_About inherits Rectangle {
         image-fit: contain;
         width: 1200px;
         height: 1200px;
-        x: (parent.width - self.width) / 2 -100px; 
+        x: (parent.width - self.width) / 2 -80px; 
         
         // 垂直居中，并向上偏移 60px (为下方的文字留出空间)
-        y: (parent.height - self.height) / 2 - 150px; 
+        y: (parent.height - self.height) / 2 - 130px; 
     }
 
     Image{
@@ -22,17 +22,17 @@ export component Page_About inherits Rectangle {
         image-fit: contain;
         width: 1000px;
         height: 1000px;
-        x: (parent.width - self.width) / 2 + 100px; 
-        y: (parent.height - self.height) / 2 - 135px;
+        x: (parent.width - self.width) / 2 + 80px; 
+        y: (parent.height - self.height) / 2 - 115px;
     }
 
 
     Text { 
         text: "关于 RoboMaster Client v0.1 "; 
         color: area_client.has-hover ? #4da6ff : white;
-        font-size: 24px; 
-        horizontal-alignment: center;
-        vertical-alignment: center;
+        font-size: Callback-Factory.font_size*1px; 
+        x: (parent.width - self.width) / 2;
+        y: (parent.height) / 2 + 3px;
 
         area_client := TouchArea {
             width: 100%;
@@ -48,7 +48,7 @@ export component Page_About inherits Rectangle {
     Text { 
         text: " Made With Slint"; 
         color:  area_slint.has-hover ? #4da6ff : white;
-        font-size: 24px; 
+        font-size: Callback-Factory.font_size*1px;
         x: (parent.width - self.width) / 2;
         y: (parent.height) / 2 + 60px;
         area_slint := TouchArea {
@@ -65,9 +65,9 @@ export component Page_About inherits Rectangle {
     Text { 
         text: " Copyright (c) 2025 HDU—PHOENIX "; 
         color:  area_phoenix.has-hover ? #4da6ff : white;
-        font-size: 24px; 
+        font-size: Callback-Factory.font_size*1px;
         x: (parent.width - self.width) / 2;
-        y: (parent.height) / 2 + 20px;
+        y: (parent.height) / 2 + 30px;
         area_phoenix := TouchArea {
             width: 100%;
             height: 100%;

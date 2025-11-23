@@ -13,6 +13,10 @@ int main() {
         callback_set_resolution(main_window, resolution);
     });
 
+    callback_factory.on_set_fullscreen([&main_window](bool is_fullscreen) {
+        callback_set_fullscreen(main_window, is_fullscreen);
+    });
+
     main_window->run();
     return 0;
 }
