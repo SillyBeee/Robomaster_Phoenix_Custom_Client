@@ -8,10 +8,9 @@ export component MainMenu inherits Rectangle {
 
     tabview := TabView {
         x: sidebar.width;
-        // y: 0px;
+        y: 0px;
         width: parent.width - sidebar.width;
         height: parent.height;
-        animate x, width { duration: 300ms; easing: ease-out-quart; }
     }
 
     sidebar := SideBar {
