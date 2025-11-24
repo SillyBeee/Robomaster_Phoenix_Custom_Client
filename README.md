@@ -40,7 +40,8 @@ Robomaster_Phoenix_Custom_Client/
 
 ```sh
 # 依赖安装
-//其实不推荐使用release预编译二进制文件安装,qt后端疑似有点问题，建议自行编译安装slint
+sudo apt install qt6-base-dev
+# 其实不推荐使用 release 预编译二进制文件安装,qt后端疑似有点问题，建议自行编译安装 slint
 sudo bash ./scripts/setup.bash
 ```
 
