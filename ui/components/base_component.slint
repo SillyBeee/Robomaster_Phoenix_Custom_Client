@@ -1,11 +1,49 @@
 //基组件
-export component Base_Component inherits Rectangle {
-    out property<int> layer;
-    out property<int> Transparency;
-    width: 0px;
-    height: 0px;
-    image: "";
-    
-    
+export component Base_Component inherits FocusScope {
+    in-out property<int> layer: 0;
+    in-out property<float> opacity_value: 1.0;
+    in-out property<length> comp_x: 100px;
+    in-out property<length> comp_y: 100px;
+    in-out property<length> comp_width: 120px;
+    in-out property<length> comp_height: 80px;
+    in-out property<brush> comp_color: #4488ff;
+    in-out property<bool> is_selected: false;
 
+    callback request_focus();
+    callback request_drag(delta_x: length, delta_y: length);
+
+    width: comp_width;
+    height: comp_height;
+    x: comp_x;
+    y: comp_y;
+    // z: layer;
+    opacity: opacity_value;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        border-width: parent.is_selected ? 2px : 1px;
+        border-color: parent.is_selected ? #ffd54f : #808080;
+        background: parent.comp_color;
+
+        TouchArea {
+            mouse-cursor: grab;
+            private property <Point> pressed_point;
+            pointer-event(event) => {
+                if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+                    root.is_selected = true;
+                    self.pressed_point.x = self.mouse-x;
+                    self.pressed_point.y = self.mouse-y
+                } else if event.kind == PointerEventKind.up && event.button == PointerEventButton.left {
+                    root.is_selected = false;
+                }
+            }
+            moved => {
+                if(root.is_selected){
+                    root.comp_x += self.mouse-x - self.pressed_point.x;
+                    root.comp_y += self.mouse-y - self.pressed_point.y;
+                }
+            }
+        }
+    }
 }
