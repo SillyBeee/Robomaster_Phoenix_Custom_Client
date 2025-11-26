@@ -7,6 +7,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 find_package(Slint REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(SDL2 REQUIRED)
 
 # 不想依赖系统安装的 Slint，可以启用下面的代码在线安装
 # find_package(Slint QUIET)
@@ -33,7 +35,7 @@ file(GLOB SOURCES "src/*.cpp" "src/drivers/*.cpp" "src/utils/*.cpp")
 add_executable(RM_Client src/main.cpp ${SOURCES})
 slint_target_sources(RM_Client ui/app-window.slint)
 
-target_link_libraries(RM_Client PRIVATE Slint::Slint)
+target_link_libraries(RM_Client PRIVATE Slint::Slint ${OpenCV_LIBS} SDL2::SDL2)
 
 
 if (WIN32)

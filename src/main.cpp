@@ -1,6 +1,14 @@
 #include <app-window.h>
 #include "callback_center.hpp"
+#include <opencv2/opencv.hpp>
+#include <slint_image.h>
+#include <thread>
+#include "driver_gamepad.hpp"
+#include "utils_cv.hpp"
 #include "slint.h"
+
+
+
 int main() {
     auto main_window = MainWindow::create();
     
@@ -18,6 +26,34 @@ int main() {
         callback_set_fullscreen(main_window, is_fullscreen);
     });
     
+
+    auto handle = main_window;
+
+    std::thread cap_thread([handle] {
+        // cv::VideoCapture cap("/home/ma/视频/录屏/1.webm");  // 或本地文件
+        // if (!cap.isOpened()) return;
+        // for (;;) {
+        //     cv::Mat frame;
+        //     if (!cap.read(frame)) break;
+        //     slint::Image image = mat_to_slint_image(frame);
+        //     slint::invoke_from_event_loop([handle, image] {
+        //         handle->global<Callback_Factory>().set_video_frame(image);
+        //     });
+        // }
+
+    });
+    drivers::GamePad gamepad;
+    if(gamepad.Init()){
+        std::thread([&gamepad]{
+        for(;;){
+            gamepad.PrintState();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        }).detach();
+    }
+    
+    
     main_window->run();
+    cap_thread.join();
     return 0;
 }
