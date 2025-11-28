@@ -34,6 +34,15 @@ Robomaster_Phoenix_Custom_Client/
 └── build/                   # 编译输出目录
 ```
 
+##  项目依赖
+
+
+[Slint 1.14.1](https://github.com/slint-ui/slint)  
+OpenCV  
+SDL2   
+[Eclipse Paho MQTT](https://github.com/eclipse-paho/paho.mqtt.cpp)  
+[Protobuf](https://github.com/protocolbuffers/protobuf/)
+
 ## 🚀 快速开始
 
 **Debain/Ubuntu**

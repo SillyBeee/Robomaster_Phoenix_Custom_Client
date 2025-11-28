@@ -183,7 +183,6 @@ export component Page_Design inherits Rectangle {
 
                 request_focus => {
                     selected_index = i;
-                    self.focus();
                 }
                 request_drag(dx, dy) => {
                     root.move_component(i, dx, dy);

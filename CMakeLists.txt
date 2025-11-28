@@ -9,6 +9,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(Slint REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(PahoMqttCpp REQUIRED)
+find_package(spdlog REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(protobuf REQUIRED)
 
 # 不想依赖系统安装的 Slint，可以启用下面的代码在线安装
 # find_package(Slint QUIET)
@@ -26,16 +30,23 @@ find_package(SDL2 REQUIRED)
 #   FetchContent_MakeAvailable(Slint)
 # endif (NOT Slint_FOUND)
 
-include_directories(include)
-include_directories(include/drivers)
-include_directories(include/utils)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
 file(GLOB SOURCES "src/*.cpp" "src/drivers/*.cpp" "src/utils/*.cpp")
 
 
 add_executable(RM_Client src/main.cpp ${SOURCES})
 slint_target_sources(RM_Client ui/app-window.slint)
 
-target_link_libraries(RM_Client PRIVATE Slint::Slint ${OpenCV_LIBS} SDL2::SDL2)
+target_link_libraries(RM_Client PRIVATE 
+Slint::Slint 
+${OpenCV_LIBS} 
+SDL2::SDL2
+spdlog::spdlog
+PahoMqttCpp::paho-mqttpp3
+nlohmann_json::nlohmann_json
+${Protobuf_LIBRARIES})
 
 
 if (WIN32)

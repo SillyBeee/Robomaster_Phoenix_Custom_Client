@@ -1,5 +1,5 @@
 //基组件
-export component Base_Component inherits FocusScope {
+export component Base_Component inherits Rectangle {
     in-out property<int> layer: 0;
     in-out property<float> opacity_value: 1.0;
     in-out property<length> comp_x: 100px;
@@ -18,32 +18,29 @@ export component Base_Component inherits FocusScope {
     y: comp_y;
     // z: layer;
     opacity: opacity_value;
+    border-width: is_selected ? 2px : 1px;
+    border-color: is_selected ? #ffd54f : #808080;
 
-    Rectangle {
-        width: parent.width;
-        height: parent.height;
-        border-width: parent.is_selected ? 2px : 1px;
-        border-color: parent.is_selected ? #ffd54f : #808080;
-        background: parent.comp_color;
 
-        TouchArea {
-            mouse-cursor: grab;
-            private property <Point> pressed_point;
-            pointer-event(event) => {
-                if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
-                    root.is_selected = true;
-                    self.pressed_point.x = self.mouse-x;
-                    self.pressed_point.y = self.mouse-y
-                } else if event.kind == PointerEventKind.up && event.button == PointerEventButton.left {
-                    root.is_selected = false;
-                }
+
+    TouchArea {
+        mouse-cursor: grab;
+        private property <Point> pressed_point;
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+                root.is_selected = true;
+                self.pressed_point.x = self.mouse-x;
+                self.pressed_point.y = self.mouse-y
+            } else if event.kind == PointerEventKind.up && event.button == PointerEventButton.left {
+                root.is_selected = false;
             }
-            moved => {
-                if(root.is_selected){
-                    root.comp_x += self.mouse-x - self.pressed_point.x;
-                    root.comp_y += self.mouse-y - self.pressed_point.y;
-                }
+        }
+        moved => {
+            if(root.is_selected){
+                root.comp_x += self.mouse-x - self.pressed_point.x;
+                root.comp_y += self.mouse-y - self.pressed_point.y;
             }
         }
     }
+    
 }
