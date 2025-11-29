@@ -61,22 +61,22 @@ void GamePad::PollLoop(){
             case SDL_CONTROLLERAXISMOTION: {
                 switch (event.caxis.axis) {
                 case SDL_CONTROLLER_AXIS_LEFTX:
-                    store_axis(GamePadInput::LeftStickX, event.caxis.value);
+                    store_axis(GamePadInput::LEFT_STICK_X, event.caxis.value);
                     break;
                 case SDL_CONTROLLER_AXIS_LEFTY:
-                    store_axis(GamePadInput::LeftStickY, event.caxis.value);
+                    store_axis(GamePadInput::LEFT_STICK_Y, event.caxis.value);
                     break;
                 case SDL_CONTROLLER_AXIS_RIGHTX:
-                    store_axis(GamePadInput::RightStickX, event.caxis.value);
+                    store_axis(GamePadInput::RIGHT_STICK_X, event.caxis.value);
                     break;
                 case SDL_CONTROLLER_AXIS_RIGHTY:
-                    store_axis(GamePadInput::RightStickY, event.caxis.value);
+                    store_axis(GamePadInput::RIGHT_STICK_Y, event.caxis.value);
                     break;
                 case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-                    store_axis(GamePadInput::LeftTrigger, event.caxis.value);
+                    store_axis(GamePadInput::LEFT_TRIGGER, event.caxis.value);
                     break;
                 case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-                    store_axis(GamePadInput::RightTrigger, event.caxis.value);
+                    store_axis(GamePadInput::RIGHT_TRIGGER, event.caxis.value);
                     break;
                 default:
                     break;
@@ -87,24 +87,24 @@ void GamePad::PollLoop(){
             case SDL_CONTROLLERBUTTONUP: {
                 bool pressed = (event.type == SDL_CONTROLLERBUTTONDOWN);
                 switch (event.cbutton.button) {
-                case SDL_CONTROLLER_BUTTON_A:             store_button(GamePadInput::ButtonA, pressed); break;
-                case SDL_CONTROLLER_BUTTON_B:             store_button(GamePadInput::ButtonB, pressed); break;
-                case SDL_CONTROLLER_BUTTON_X:             store_button(GamePadInput::ButtonX, pressed); break;
-                case SDL_CONTROLLER_BUTTON_Y:             store_button(GamePadInput::ButtonY, pressed); break;
-                case SDL_CONTROLLER_BUTTON_BACK:      store_button(GamePadInput::PageUp, pressed); break;
-                case SDL_CONTROLLER_BUTTON_GUIDE:       store_button(GamePadInput::Steam, pressed); break;
-                case SDL_CONTROLLER_BUTTON_START:      store_button(GamePadInput::Settings, pressed); break;
-                case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  store_button(GamePadInput::LeftShoulder, pressed); break;
-                case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: store_button(GamePadInput::RightShoulder, pressed); break;
-                case SDL_CONTROLLER_BUTTON_DPAD_UP:       store_button(GamePadInput::DPadUp, pressed); break;
-                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:     store_button(GamePadInput::DPadDown, pressed); break;
-                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:     store_button(GamePadInput::DPadLeft, pressed); break;
-                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:    store_button(GamePadInput::DPadRight, pressed); break;
-                case SDL_CONTROLLER_BUTTON_MISC1:          store_button(GamePadInput::ButtonExtra, pressed); break;
-                case SDL_CONTROLLER_BUTTON_PADDLE1:         store_button(GamePadInput::BackRightUpper, pressed); break;
-                case SDL_CONTROLLER_BUTTON_PADDLE2:         store_button(GamePadInput::BackLeftUpper, pressed); break;
-                case SDL_CONTROLLER_BUTTON_PADDLE3:     store_button(GamePadInput::BackRightLower, pressed); break;
-                case SDL_CONTROLLER_BUTTON_PADDLE4:     store_button(GamePadInput::BackLeftLower, pressed); break;
+                case SDL_CONTROLLER_BUTTON_A:             store_button(GamePadInput::BUTTON_A, pressed); break;
+                case SDL_CONTROLLER_BUTTON_B:             store_button(GamePadInput::BUTTON_B, pressed); break;
+                case SDL_CONTROLLER_BUTTON_X:             store_button(GamePadInput::BUTTON_X, pressed); break;
+                case SDL_CONTROLLER_BUTTON_Y:             store_button(GamePadInput::BUTTON_Y, pressed); break;
+                case SDL_CONTROLLER_BUTTON_BACK:          store_button(GamePadInput::PAGE_UP, pressed); break;
+                case SDL_CONTROLLER_BUTTON_GUIDE:         store_button(GamePadInput::STEAM, pressed); break;
+                case SDL_CONTROLLER_BUTTON_START:         store_button(GamePadInput::SETTINGS, pressed); break;
+                case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  store_button(GamePadInput::LEFT_SHOULDER, pressed); break;
+                case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: store_button(GamePadInput::RIGHT_SHOULDER, pressed); break;
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:       store_button(GamePadInput::DPAD_UP, pressed); break;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:     store_button(GamePadInput::DPAD_DOWN, pressed); break;
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:     store_button(GamePadInput::DPAD_LEFT, pressed); break;
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:    store_button(GamePadInput::DPAD_RIGHT, pressed); break;
+                case SDL_CONTROLLER_BUTTON_MISC1:         store_button(GamePadInput::BUTTON_EXTRA, pressed); break;
+                case SDL_CONTROLLER_BUTTON_PADDLE1:       store_button(GamePadInput::BACK_RIGHT_UPPER, pressed); break;
+                case SDL_CONTROLLER_BUTTON_PADDLE2:       store_button(GamePadInput::BACK_LEFT_UPPER, pressed); break;
+                case SDL_CONTROLLER_BUTTON_PADDLE3:       store_button(GamePadInput::BACK_RIGHT_LOWER, pressed); break;
+                case SDL_CONTROLLER_BUTTON_PADDLE4:       store_button(GamePadInput::BACK_LEFT_LOWER, pressed); break;
                 default:
                     break;
                 }

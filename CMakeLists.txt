@@ -12,7 +12,7 @@ find_package(SDL2 REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 
 # 不想依赖系统安装的 Slint，可以启用下面的代码在线安装
 # find_package(Slint QUIET)
@@ -33,6 +33,8 @@ find_package(protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/protocol)
+
 file(GLOB SOURCES "src/*.cpp" "src/drivers/*.cpp" "src/utils/*.cpp")
 
 
