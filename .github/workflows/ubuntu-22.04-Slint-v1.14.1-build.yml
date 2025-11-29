@@ -3,7 +3,7 @@ name: ubuntu-22.04-Slint-v1.14.1-build
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - '**'
 
@@ -31,7 +31,13 @@ jobs:
               echo
               echo 'entered repo directory'
               echo
-      
+
+              echo
+              echo 'starting installing deps'
+              echo
+              chmod +x scripts/setup.bash || true
+              sudo bash scripts/setup.bash
+
               rm -rf build
               echo
               echo 'old build files removed'
@@ -39,7 +45,7 @@ jobs:
               
               mkdir build
               cd build 
-              cmake .. -DSlint_DIR=/.local/lib/cmake/Slint
+              cmake .. 
               make -j
               echo
               echo 'build completed successfully'
