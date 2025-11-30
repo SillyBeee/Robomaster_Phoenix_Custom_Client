@@ -21,7 +21,7 @@ class SocketImageReceiver
 public:
     using Frame = std::vector<uint8_t>;
 
-    explicit SocketImageReceiver(uint16_t port = 3334, size_t max_frame_size = 8 * 1024 * 1024);
+    explicit SocketImageReceiver(uint16_t port = 3334, size_t max_frame_size = 8 * 1024 * 1024, const std::string &bind_ip = "");
     ~SocketImageReceiver();
 
     bool Init();
@@ -50,7 +50,7 @@ private:
 
     uint16_t port_;
     size_t max_frame_size_;
-
+    std::string bind_ip_; // 新增：可选绑定的本地 IP
     int sockfd_ = -1;
     bool running_ = false;
     std::thread core_thread_;

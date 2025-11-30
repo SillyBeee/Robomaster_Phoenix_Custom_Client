@@ -35,7 +35,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/protocol)
 
-file(GLOB SOURCES "src/*.cpp" "src/drivers/*.cpp" "src/utils/*.cpp")
+file(GLOB SOURCES 
+"src/*.cpp" 
+"src/drivers/*.cpp" 
+"src/utils/*.cpp " 
+"src/protocol/*.cc")
 
 
 add_executable(RM_Client src/main.cpp ${SOURCES})

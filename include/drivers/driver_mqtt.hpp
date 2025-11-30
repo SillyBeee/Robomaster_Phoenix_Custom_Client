@@ -3,6 +3,7 @@
 #include <array>
 #include <functional>
 #include <mqtt/async_client.h>
+#include <spdlog/spdlog.h>
 #include <unordered_map>
 
 namespace drivers
@@ -28,7 +29,7 @@ public:
         BUFF,                             // Buff 效果通知 — 触发后持续发送（1Hz）
         PENALTY_INFO,                     // 判罚信息同步 — 触发式发送
         ROBOT_PATH_PLAN_INFO,             // 机器人路径/规划信息 — 1Hz
-        RADAR_INFO_TO_CLIENT,             // 雷达发送的机器人位置信息 — 1Hz
+        RADER_INFO_TO_CLIENT,             // 雷达发送的机器人位置信息 — 1Hz
         CUSTOM_BYTE_BLOCK,                // 自定义字节块（高频数据） — 50Hz
         TECH_CORE_MOTION_STATE_SYNC,      // 科技核心运动状态同步 — 1Hz
         ROBOT_PERFORMANCE_SELECTION_SYNC, // 性能体系状态同步 — 1Hz
@@ -58,7 +59,7 @@ public:
 
     struct TopicMeta
     {
-        const char* name;
+        std::string name;
         int qos;
     };
 
@@ -66,8 +67,8 @@ public:
 
     bool Connect();
     bool Disconnect();
-    void StartProcessing();
-    void StopProcessing();
+    // void StartProcessing();
+    // void StopProcessing();
 
     //支持通过enum与string两种方式发布和订阅
     bool Publish(const std::string& topic, const std::string& payload, int qos = 1);
@@ -75,16 +76,16 @@ public:
     bool Subscribe(const std::string& topic, int qos = 1);
     bool Subscribe(InputTopic topic, int qos = -1);
 
-    // 通过enum获取topic string
+    // 通过enum获取topic string 与
     static const TopicMeta& GetInputTopic(InputTopic t);
     static const TopicMeta& GetOutputTopic(OutputTopic t);
 
-    // 设置消息回调（收到后返回 topic 名称和内容）
-    void SetMessageHandler(std::function<void(const std::string& topic, const std::string& payload)> handler);
+
     ~MqttClient() = default;
 
 private:
     void InitSubscriber();
+    void MessageCallback(mqtt::const_message_ptr msg);
 
     std::unique_ptr<mqtt::async_client> client_;
     std::unique_ptr<mqtt::callback> client_cb_;
@@ -95,11 +96,38 @@ private:
     std::string client_id_;
 
     std::mutex handler_mutex_;
-    std::function<void(const std::string& topic, const std::string& payload)> message_handler_;
 
     //enum与string&qos对应表
     static const std::array<TopicMeta, static_cast<size_t>(InputTopic::COUNT_INPUT_TOPICS)> INPUT_TOPIC_META_DICT;
     static const std::array<TopicMeta, static_cast<size_t>(OutputTopic::COUNT_OUTPUT_TOPICS)> OUTPUT_TOPIC_META_DICT;
 };
+
+
+// MQTT 客户端回调类
+class ClientCallback : public virtual mqtt::callback
+{
+public:
+    using MsgFn = std::function<void(mqtt::const_message_ptr)>;
+    explicit ClientCallback(MsgFn fn) : fn_(std::move(fn)) {}
+    void connection_lost(const std::string& cause) override
+    {
+        spdlog::warn("MQTT connection lost: {}", cause);
+    }
+    void message_arrived(mqtt::const_message_ptr msg) override
+    {
+        if (fn_){
+            fn_(msg);
+        }  
+    }
+    void delivery_complete(mqtt::delivery_token_ptr token) override
+    {
+        (void)token;
+    }
+
+private:
+    MsgFn fn_;
+};
+
+
 } // namespace drivers
 #endif // DRIVER_MQTT_HPP
