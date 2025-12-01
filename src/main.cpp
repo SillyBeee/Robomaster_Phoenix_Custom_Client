@@ -47,7 +47,7 @@ int main() {
   drivers::GamePad gamepad;
   drivers::MqttClient mqtt_client("127.0.0.1");
   
-  drivers::SocketImageReceiver socket_receiver("127.0.0.1",3334, 10000000000 );
+  drivers::SocketImageReceiver socket_receiver("127.0.0.1",3334, 16 * 1024 * 1024 );
 
   mqtt_client.Connect();
 
