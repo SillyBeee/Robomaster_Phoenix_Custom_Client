@@ -15,89 +15,72 @@
 namespace drivers
 {
 
-SocketImageReceiver::SocketImageReceiver(uint16_t port, size_t max_frame_size, const std::string &bind_ip)
+SocketImageReceiver::SocketImageReceiver(const std::string &ip,uint16_t port, size_t max_frame_size)
     : port_(port),
       max_frame_size_(max_frame_size),
-      bind_ip_(bind_ip)
+      ip_(ip)
 {
 }
 
 SocketImageReceiver::~SocketImageReceiver()
 {
-    Shutdown();
+    this->Disconnect();
 }
 
-bool SocketImageReceiver::Init()
+bool SocketImageReceiver::Connect() 
 {
-    if (running_) {
-        spdlog::warn("SocketImageReceiver::Init called but already running");
-        return true; // 已经初始化
-    }
+    if (running_) return true;
 
-    spdlog::info("SocketImageReceiver::Init bind_ip='{}' port={}", bind_ip_.empty() ? "0.0.0.0" : bind_ip_, port_);
-
-    sockfd_ = socket(AF_INET, SOCK_DGRAM, 0);
+    // 创建 UDP Socket
+    sockfd_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd_ < 0) {
-        spdlog::error("SocketImageReceiver::Init: socket creation failed: {}", strerror(errno));
+        spdlog::error("Socket creation failed: {}", strerror(errno));
         return false;
     }
 
-    // 重用地址
     int yes = 1;
-    if (setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) < 0) {
-        spdlog::error("SocketImageReceiver::Init: setsockopt SO_REUSEADDR failed: {}", strerror(errno));
-        close(sockfd_);
-        sockfd_ = -1;
-        return false;
-    }
+    setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    
+    int rcvbuf = 4 * 1024 * 1024; 
+    setsockopt(sockfd_, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf));
 
-    // 绑定到指定 IP 或 INADDR_ANY:port_
-    sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port_);
-
-    if (!bind_ip_.empty()) {
-        // 将 bind_ip_ 转换为 binary address
-        if (inet_pton(AF_INET, bind_ip_.c_str(), &addr.sin_addr) != 1) {
-            spdlog::error("SocketImageReceiver::Init: invalid bind IP: {}", bind_ip_);
-            close(sockfd_);
-            sockfd_ = -1;
-            return false;
-        }
+    sockaddr_in local_addr;
+    memset(&local_addr, 0, sizeof(local_addr));
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_port = htons(port_); // 必须是 3334
+    
+    // 如果是本地测试，建议绑定 127.0.0.1 或者 0.0.0.0 (INADDR_ANY)
+    if (!ip_.empty()) {
+        inet_pton(AF_INET, ip_.c_str(), &local_addr.sin_addr);
     } else {
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     }
 
-    if (bind(sockfd_, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0) {
-        spdlog::error("SocketImageReceiver::Init: bind failed: {}", strerror(errno));
+    if (bind(sockfd_, (sockaddr*)&local_addr, sizeof(local_addr)) < 0) {
+        spdlog::error("Bind failed on port {}: {}", port_, strerror(errno));
         close(sockfd_);
-        sockfd_ = -1;
         return false;
     }
 
-    spdlog::info("SocketImageReceiver bound successfully");
-
-    // 将 socket 设为 non-blocking，以便可优雅地退出线程
+    // 5. 设置非阻塞
     int flags = fcntl(sockfd_, F_GETFL, 0);
-    if (flags >= 0) {
-        fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
-    }
+    fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
+
+    spdlog::info("Socket successfully BOUND to {}:{}", ip_.empty() ? "ANY" : ip_, port_);
 
     running_ = true;
     core_thread_ = std::thread(&SocketImageReceiver::PollLoop, this);
-
     return true;
 }
 
-void SocketImageReceiver::Shutdown()
+void SocketImageReceiver::Disconnect()
 {
     if (!running_) {
-        spdlog::info("SocketImageReceiver::Shutdown called but not running");
+        spdlog::info("SocketImageReceiver::Disconnect called but not running");
         return;
     }
 
-    spdlog::info("SocketImageReceiver::Shutdown");
+    spdlog::info("SocketImageReceiver::Disconnect");
     running_ = false;
 
     // 关闭 socket：Polling thread 会检测到错误并退出
@@ -152,20 +135,6 @@ bool SocketImageReceiver::GetFrameBlocking(Frame &out, int timeout_ms)
     return true;
 }
 
-void SocketImageReceiver::PrintState(std::ostream &os) const
-{
-    std::lock_guard<std::mutex> b_lk(buffers_mutex_);
-    std::lock_guard<std::mutex> r_lk(ready_mutex_);
-    os << "SocketImageReceiver: port=" << port_
-       << " running=" << running_
-       << " sockfd=" << sockfd_
-       << " total_packets=" << total_packets_received_
-       << " total_frames_completed=" << total_frames_completed_
-       << " ready_frames=" << ready_frames_.size()
-       << " active_buffers=" << buffers_.size()
-       << " last_seq=" << last_seq_
-       << "\n";
-}
 
 void SocketImageReceiver::CleanupStaleBuffers()
 {
@@ -188,12 +157,12 @@ void SocketImageReceiver::PollLoop()
     // buffer for UDP read
     const size_t recv_buf_size = 65536;
     std::vector<uint8_t> recv_buf(recv_buf_size);
+    spdlog::info("SocketImageReceiver::PollLoop started");
 
-    sockaddr_in src_addr;
-    socklen_t addrlen = sizeof(src_addr);
+
 
     while (running_) {
-        ssize_t n = recvfrom(sockfd_, recv_buf.data(), recv_buf_size, 0, reinterpret_cast<sockaddr*>(&src_addr), &addrlen);
+        int n = recv(sockfd_, recv_buf.data(), recv_buf.size(), 0);
         if (n < 0) {
             if (errno == EWOULDBLOCK || errno == EAGAIN) {
                 // 没有数据，稍微休眠
@@ -210,7 +179,7 @@ void SocketImageReceiver::PollLoop()
             }
         }
 
-        if (static_cast<size_t>(n) < 8) {
+        if (static_cast<size_t>(n) < 8) {  
             // header 都没有，丢弃
             ++total_packets_received_;
             spdlog::warn("SocketImageReceiver::PollLoop received too-small packet: {} bytes", n);
@@ -218,17 +187,16 @@ void SocketImageReceiver::PollLoop()
         }
 
         ++total_packets_received_;
-        spdlog::trace("SocketImageReceiver::PollLoop packet received {} bytes from {}", n, inet_ntoa(src_addr.sin_addr));
+        spdlog::info("SocketImageReceiver::PollLoop packet received {} bytes", n);
 
         // parse header：seq(uint16_t), frag_index(uint16_t), total_size(uint32_t) — 全部 network order（big endian）
         const uint8_t* p = recv_buf.data();
-        uint16_t seq_net = (uint16_t)((p[0] << 8) | p[1]);
-        uint16_t frag_idx_net = (uint16_t)((p[2] << 8) | p[3]);
-        uint32_t total_size_net = (uint32_t)((p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7]);
+        uint16_t seq = (uint16_t)((p[0] << 8) | p[1]);
+        uint16_t frag_idx = (uint16_t)((p[2] << 8) | p[3]);
+        uint32_t total_size = (uint32_t)((p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7]);
+        spdlog::error("SocketImageReceiver::PollLoop header: seq={} frag_idx={} total_size={}", seq, frag_idx, total_size);
 
-        uint16_t seq = ntohs(seq_net); // 网络字节序转 host
-        uint16_t frag_idx = ntohs(frag_idx_net);
-        uint32_t total_size = ntohl(total_size_net);
+       
 
         // payload
         size_t payload_len = static_cast<size_t>(n) - 8;

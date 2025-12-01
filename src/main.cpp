@@ -5,6 +5,7 @@
 #include "slint.h"
 #include "spdlog/spdlog.h"
 #include "utils_cv.hpp"
+#include "driver_ffmpeg_decoder.hpp"
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
@@ -46,34 +47,36 @@ int main() {
   drivers::GamePad gamepad;
   drivers::MqttClient mqtt_client("127.0.0.1");
   
-  drivers::SocketImageReceiver socket_receiver(3334, 1032, "127.0.0.1");
+  drivers::SocketImageReceiver socket_receiver("127.0.0.1",3334, 10000000000 );
 
   mqtt_client.Connect();
 
 
   std::atomic_bool stop_flag{false};
   std::thread socket_thread([&socket_receiver, &stop_flag]{
-    if (!socket_receiver.Init()) {
+    if (!socket_receiver.Connect()) {
       spdlog::error("Failed to initialize SocketImageReceiver");
       return;
     }
+    
+    // 实例化解码器
+    HevcDecoder decoder;
     drivers::SocketImageReceiver::Frame frame;
     int empty_count = 0;
+
     while (!stop_flag) {
-      // 阻塞等待一帧，超时 500ms，可根据需要调整
-      // spdlog::info("cd while 1");
       if (socket_receiver.GetFrameBlocking(frame, 500)) {
         empty_count = 0;
-        // 假设收到的是 JPEG/PNG 压缩字节流，使用 imdecode 解码
-        cv::Mat img = cv::imdecode(frame, cv::IMREAD_COLOR);
-        if (!img.empty()) {
+        
+        cv::Mat img;
+        // 使用 FFmpeg 解码器替代 imdecode
+        // cv::Mat img = cv::imdecode(frame, cv::IMREAD_COLOR); 
+        if (decoder.decode(frame, img) && !img.empty()) {
           spdlog::info("SocketThread displayed image size={}x{}", img.cols, img.rows);
           cv::imshow("SocketFrame", img);
-          // 1ms 处理窗体事件
           cv::waitKey(1);
-          // spdlog::info("SocketThread displayed image size={}x{}", img.cols, img.rows);
         } else {
-          spdlog::warn("SocketThread decoded image is empty, bytes={}", frame.size());
+          spdlog::warn("Decode failed or image empty, bytes={}", frame.size());
         }
       } else {
         // 超时或 receiver 已停止
@@ -94,7 +97,7 @@ int main() {
   
   spdlog::info("UI exited, shutting down socket thread");
   stop_flag = true;
-  socket_receiver.Shutdown();
+  socket_receiver.Disconnect();
   if (socket_thread.joinable()) socket_thread.join();
   // if(mqtt_thread.joinable()) mqtt_thread.join();
   if (cap_thread.joinable()) cap_thread.join();

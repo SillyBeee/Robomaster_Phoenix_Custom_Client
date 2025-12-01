@@ -14,6 +14,13 @@ find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
 
+# --- 查找 FFmpeg ---
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(AVCODEC REQUIRED libavcodec)
+pkg_check_modules(AVFORMAT REQUIRED libavformat)
+pkg_check_modules(AVUTIL REQUIRED libavutil)
+pkg_check_modules(SWSCALE REQUIRED libswscale)
+
 # 不想依赖系统安装的 Slint，可以启用下面的代码在线安装
 # find_package(Slint QUIET)
 # if (NOT Slint_FOUND)
@@ -34,6 +41,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/protocol)
+include_directories(
+    ${AVCODEC_INCLUDE_DIRS}
+    ${AVFORMAT_INCLUDE_DIRS}
+    ${AVUTIL_INCLUDE_DIRS}
+    ${SWSCALE_INCLUDE_DIRS}
+)
 
 file(GLOB SOURCES 
 "src/*.cpp" 
@@ -52,7 +65,12 @@ SDL2::SDL2
 spdlog::spdlog
 PahoMqttCpp::paho-mqttpp3
 nlohmann_json::nlohmann_json
-${Protobuf_LIBRARIES})
+${Protobuf_LIBRARIES}
+${AVCODEC_LIBRARIES}
+${AVFORMAT_LIBRARIES}
+${AVUTIL_LIBRARIES}
+${SWSCALE_LIBRARIES}
+)
 
 
 if (WIN32)
