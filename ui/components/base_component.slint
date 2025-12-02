@@ -1,46 +1,76 @@
 //基组件
+import {Callback_Factory} from "../callback_factory.slint";
 export component Base_Component inherits Rectangle {
-    in-out property<int> layer: 0;
-    in-out property<float> opacity_value: 1.0;
-    in-out property<length> comp_x: 100px;
-    in-out property<length> comp_y: 100px;
-    in-out property<length> comp_width: 120px;
-    in-out property<length> comp_height: 80px;
-    in-out property<brush> comp_color: #4488ff;
-    in-out property<bool> is_selected: false;
+    // ==========================================
+    // 上下文输入 (必须由父组件传入)
+    // ==========================================
+    in property <length> container_width;  // 父容器宽度
+    in property <length> container_height; // 父容器高度
+    in property <int> container_index;  // 父容器中该组件的索引
 
-    callback request_focus();
-    callback request_drag(delta_x: length, delta_y: length);
+    // ==========================================
+    // 核心属性 (百分制，范围 0.0 ~ 1.0) - 用于持久化保存
+    // ==========================================
+    in-out property <float> rel_x: 0.1;      // 默认 10% 位置
+    in-out property <float> rel_y: 0.1;      // 默认 10% 位置
+    in-out property <float> rel_width: 0.2;  // 默认 20% 宽度
+    in-out property <float> rel_height: 0.1; // 默认 10% 高度
 
-    width: comp_width;
-    height: comp_height;
-    x: comp_x;
-    y: comp_y;
-    // z: layer;
+    // ==========================================
+    //  派生属性 (绝对像素) - 自动计算，不要手动赋值
+    // ==========================================
+    x: container_width * rel_x;
+    y: container_height * rel_y;
+    width: container_width * rel_width;
+    height: container_height * rel_height;
+
+    // ==========================================
+    // 其他外观属性
+    // ==========================================
+    in-out property <int> layer: 0;
+    in-out property <float> opacity_value: 1.0;
+    in-out property <brush> comp_color: #4488ff;
+    in-out property <bool> is_selected: false;
+
+    // 样式绑定
+    background: comp_color;
     opacity: opacity_value;
     border-width: is_selected ? 2px : 1px;
     border-color: is_selected ? #ffd54f : #808080;
 
-
-
+    // ==========================================
+    // 交互逻辑
+    // ==========================================
     TouchArea {
         mouse-cursor: grab;
         private property <Point> pressed_point;
+
         pointer-event(event) => {
-            if event.kind == PointerEventKind.down && event.button == PointerEventButton.left {
+            if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
                 root.is_selected = true;
-                self.pressed_point.x = self.mouse-x;
-                self.pressed_point.y = self.mouse-y
-            } else if event.kind == PointerEventKind.up && event.button == PointerEventButton.left {
-                root.is_selected = false;
+                Callback_Factory.current_component_index = container_index;
+                self.pressed_point = { x: self.mouse-x, y: self.mouse-y };
+            } else if (event.kind == PointerEventKind.up) {
+                // 可以在这里触发保存回调，将 rel_x, rel_y 存入数据库/文件
             }
         }
+
         moved => {
-            if(root.is_selected){
-                root.comp_x += self.mouse-x - self.pressed_point.x;
-                root.comp_y += self.mouse-y - self.pressed_point.y;
+            if (root.is_selected && root.container_width > 0 && root.container_height > 0) {
+
+                // 计算鼠标移动的像素距离 (delta)
+                let dx = self.mouse-x - self.pressed_point.x;
+                let dy = self.mouse-y - self.pressed_point.y;
+
+                // 将像素距离转换为百分比距离
+                let delta_rel_x = dx / root.container_width;
+                let delta_rel_y = dy / root.container_height;
+
+                // 更新百分比属性 (Source of Truth)
+
+                root.rel_x = Math.max(0.0, Math.min(1.0 - root.rel_width, root.rel_x + delta_rel_x));
+                root.rel_y = Math.max(0.0, Math.min(1.0 - root.rel_height, root.rel_y + delta_rel_y));
             }
         }
     }
-    
 }

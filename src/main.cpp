@@ -95,10 +95,9 @@ int main() {
 
   LOG_INFO("UI exited, shutting down socket thread");
   stop_flag = true;
-  socket_receiver.Disconnect();
-  if (socket_thread.joinable()) socket_thread.join();
+  if (socket_thread.joinable()) {socket_thread.join();}
   // if(mqtt_thread.joinable()) mqtt_thread.join();
-  if (cap_thread.joinable()) cap_thread.join();
+  if (cap_thread.joinable()) {cap_thread.join();}
   LOG_INFO("Application exiting");
   return 0;
 }

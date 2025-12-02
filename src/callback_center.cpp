@@ -1,5 +1,5 @@
 #include "callback_center.hpp"
-
+#include "logger.hpp"
 void callback_open_url(slint::SharedString url)
 {
     std::string url_str(url);
@@ -9,14 +9,14 @@ void callback_open_url(slint::SharedString url)
     command = "start " + url_str;
     #else
     // Linux 和其他 Unix 系统(macos不支持喵)
-    command = "xdg-open '" + url_str + "'";
+    command = "xdg-open '" + url_str + "' > /dev/null 2>&1";
     #endif
     
     int result = std::system(command.c_str());
     if (result == 0) {
-        std::cout << "Successfully opened URL: " << url_str << std::endl;
+        LOG_INFO("Successfully opened URL: {}", url_str);
     } else {
-        std::cerr << "Failed to open URL: " << url_str << std::endl;
+        LOG_ERROR("Failed to open URL: {}", url_str);
     }
 }
 
@@ -37,12 +37,12 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
             window->window().set_size(size);
             window->global<Callback_Factory>()
                 .set_font_size(std::min(float(width), float(height)) * 0.015f);
-            std::cout<<"Set font size to: "<< std::min(float(width), float(height)) * 0.015f <<std::endl;
-            std::cout << "Resolution set to: " << width << "x" << height << std::endl;
+            LOG_INFO("Set font size to: {}", std::min(float(width), float(height)) * 0.015f);
+            LOG_INFO("Resolution set to: {}x{}", width, height);
         }
     }
     catch (const std::exception& e) {
-            std::cerr << "Failed to parse resolution: " << e.what() << std::endl;
+            LOG_ERROR("Failed to parse resolution: {}", e.what());
     }
     
 }
@@ -51,5 +51,6 @@ void callback_set_fullscreen(slint::ComponentHandle<MainWindow>& window,
                             bool is_fullscreen){
     window->set_is_fullscreen(is_fullscreen);
     window->window().set_fullscreen(is_fullscreen);
+    LOG_INFO("Set fullscreen mode to: {}", is_fullscreen);
     
 }
