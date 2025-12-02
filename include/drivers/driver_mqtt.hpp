@@ -3,7 +3,7 @@
 #include <array>
 #include <functional>
 #include <mqtt/async_client.h>
-#include <spdlog/spdlog.h>
+#include "logger.hpp"
 #include <unordered_map>
 
 namespace drivers
@@ -111,7 +111,7 @@ public:
     explicit ClientCallback(MsgFn fn) : fn_(std::move(fn)) {}
     void connection_lost(const std::string& cause) override
     {
-        spdlog::warn("MQTT connection lost: {}", cause);
+        LOG_WARN("MQTT connection lost: {}", cause);
     }
     void message_arrived(mqtt::const_message_ptr msg) override
     {

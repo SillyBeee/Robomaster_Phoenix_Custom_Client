@@ -3,7 +3,7 @@
 #include "driver_mqtt.hpp"
 #include "driver_socket.hpp"
 #include "slint.h"
-#include "spdlog/spdlog.h"
+#include "logger.hpp"
 #include "utils_cv.hpp"
 #include "driver_ffmpeg_decoder.hpp"
 #include <app-window.h>
@@ -12,8 +12,6 @@
 #include <thread>
 
 int main() {
-  spdlog::set_level(spdlog::level::debug);                // 日志级别
-  spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v"); // 格式
   auto main_window = MainWindow::create();
 
   auto &callback_factory = main_window->global<Callback_Factory>();
@@ -55,7 +53,7 @@ int main() {
   std::atomic_bool stop_flag{false};
   std::thread socket_thread([&socket_receiver, &stop_flag]{
     if (!socket_receiver.Connect()) {
-      spdlog::error("Failed to initialize SocketImageReceiver");
+      LOG_ERROR("Failed to initialize SocketImageReceiver");
       return;
     }
     
@@ -72,35 +70,35 @@ int main() {
         // 使用 FFmpeg 解码器替代 imdecode
         // cv::Mat img = cv::imdecode(frame, cv::IMREAD_COLOR); 
         if (decoder.decode(frame, img) && !img.empty()) {
-          spdlog::info("SocketThread displayed image size={}x{}", img.cols, img.rows);
+          LOG_INFO("SocketThread displayed image size={}x{}", img.cols, img.rows);
           cv::imshow("SocketFrame", img);
           cv::waitKey(1);
         } else {
-          spdlog::warn("Decode failed or image empty, bytes={}", frame.size());
+          LOG_WARN("Decode failed or image empty, bytes={}", frame.size());
         }
       } else {
         // 超时或 receiver 已停止
         ++empty_count;
         if (empty_count % 5 == 0) { // 每 20 次（约10s）打印一次，避免过多日志
-          spdlog::debug("SocketThread waiting for frames... (no frame in last {} checks)", empty_count);
+          LOG_DEBUG("SocketThread waiting for frames... (no frame in last {} checks)", empty_count);
         }
       }
     }
     // cv::destroyWindow("SocketFrame");
-    spdlog::info("Socket display thread exiting");
+    LOG_INFO("Socket display thread exiting");
   });
 
   
   
 
   main_window->run();
-  
-  spdlog::info("UI exited, shutting down socket thread");
+
+  LOG_INFO("UI exited, shutting down socket thread");
   stop_flag = true;
   socket_receiver.Disconnect();
   if (socket_thread.joinable()) socket_thread.join();
   // if(mqtt_thread.joinable()) mqtt_thread.join();
   if (cap_thread.joinable()) cap_thread.join();
-  spdlog::info("Application exiting");
+  LOG_INFO("Application exiting");
   return 0;
 }

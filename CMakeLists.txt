@@ -51,7 +51,7 @@ include_directories(
 file(GLOB SOURCES 
 "src/*.cpp" 
 "src/drivers/*.cpp" 
-"src/utils/*.cpp " 
+"src/utils/*.cpp" 
 "src/protocol/*.cc")
 
 
