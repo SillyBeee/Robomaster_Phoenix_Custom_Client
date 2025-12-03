@@ -1,0 +1,40 @@
+import { Base_Component, ComponentProps } from "base_component.slint";
+import { Callback_Factory } from "../callback_factory.slint";
+
+export component Component_Render inherits Rectangle {
+    // 作为一个透明容器，填满父级
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    clip: true; // 防止子组件拖出边界
+
+    // 在这里进行遍历生成
+    for comp[i] in Callback_Factory.components: Base_Component {
+        // 构造结构体传递给 Base_Component
+        props: {
+            // 上下文数据 (使用 root.width/height，即当前容器的大小)
+            container_width: root.width,
+            container_height: root.height,
+            container_index: i,
+
+            // 核心数据 (来自模型)
+            rel_x: comp.rel_x,
+            rel_y: comp.rel_y,
+            rel_width: comp.rel_width,
+            rel_height: comp.rel_height,
+            
+            // 外观数据
+            background_color: comp.color,       
+            opacity_value: comp.opacity,
+            layer: comp.layer,
+        };
+        
+        // 选中状态判断
+        is_selected: i == Callback_Factory.current_component_index;
+        
+        // 未来可以在这里根据 comp.type 添加 if/else 逻辑
+        // 但由于 Slint 的限制，for 循环内只能生成一种类型的组件。
+        // 如果要支持多种类型，通常的做法是 Base_Component 内部再包含一个 switch 逻辑，
+        // 或者在这里使用 if (comp.type == "A") : CompA {} if (comp.type == "B") : CompB {}
+    }
+}

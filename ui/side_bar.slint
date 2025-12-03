@@ -39,7 +39,7 @@ component SideBarItem inherits Rectangle {
             image-fit: contain;
             vertical-alignment: center;
             height: 60%;
-            width: 22px;
+            width: Callback_Factory.font_size * 2px;
         }
 
         Text {
@@ -54,8 +54,8 @@ component SideBarItem inherits Rectangle {
 }
 
 export component SideBar inherits Rectangle {
-    out property <length> collapsed-width: 45px;
-    out property <length> expanded-width: 200px;
+    out property <length> collapsed-width: Callback_Factory.font_size * 3.5px;
+    out property <length> expanded-width: Callback_Factory.font_size * 15px;
     out property <bool> is_expanded: false;
 
     height: 100%;

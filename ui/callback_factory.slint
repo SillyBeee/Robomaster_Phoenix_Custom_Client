@@ -8,9 +8,24 @@ export global Callback_Factory{
     in-out property <image> video_frame; //当前视频帧
     in-out property <int> current_component_index: -1; //当前选中组件索引
 
+    // 组件数据模型 (全部使用相对百分比)
+    in-out property<[{
+        color: brush,
+        rel_width: float,
+        rel_height: float,
+        rel_x: float,
+        rel_y: float,
+        opacity: float,
+        layer: int,
+    }]> components: [
+        { color: #44ffaa, rel_width: 0.2, rel_height: 0.1, rel_x: 0.1, rel_y: 0.1, opacity: 0.9, layer: 0 },
+        { color: #ff8844, rel_width: 0.2, rel_height: 0.2, rel_x: 0.4, rel_y: 0.3, opacity: 1.0, layer: 1 },
+    ];
     
     //全局回调
     callback open-url(string);
     callback set_resolution(string);
     callback set_fullscreen(bool);
+    
+
 }

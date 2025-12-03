@@ -1,0 +1,211 @@
+import { Callback_Factory } from "../../callback_factory.slint";
+import { Slider, SpinBox } from "std-widgets.slint";
+//属性栏
+export component Attribute_Bar inherits Rectangle {
+    width: 240px;
+    height: 96%;
+    background: #1d1f2a;
+
+    out property <bool> has_selection: 
+    Callback_Factory.current_component_index >= 0 && Callback_Factory.current_component_index < Callback_Factory.components.length;
+    property <[brush]> palette_colors: [#44ffaa, #ff8844, #4488ff, #ffffff, #aa88ff];
+
+    //辅助函数判断是否为合法index
+    public function is_valid_index(index: int) -> bool {
+        return index >= 0 && index < Callback_Factory.components.length;
+    }
+
+     // 更新 Width (百分比)
+    public function set_component_rel_width(index: int, value: float) {
+        if (!is_valid_index(index)) {
+            return;
+        }
+        let current = Callback_Factory.components[index];
+        Callback_Factory.components[index] = {
+            color: current.color,
+            rel_width: value,
+            rel_height: current.rel_height,
+            rel_x: current.rel_x,
+            rel_y: current.rel_y,
+            opacity: current.opacity,
+            layer: current.layer,
+        };
+    }
+
+    // 更新 Height (百分比)
+    public function set_component_rel_height(index: int, value: float) {
+        if (!is_valid_index(index)) {
+            return;
+        }
+        let current = Callback_Factory.components[index];
+        Callback_Factory.components[index] = {
+            color: current.color,
+            rel_width: current.rel_width,
+            rel_height: value,
+            rel_x: current.rel_x,
+            rel_y: current.rel_y,
+            opacity: current.opacity,
+            layer: current.layer,
+        };
+    }
+
+    //设置透明度
+    public function set_component_opacity(index: int, value: float) {
+        if (!is_valid_index(index)) {
+            return;
+        }
+        let current = Callback_Factory.components[index];
+        Callback_Factory.components[index] = {
+            color: current.color,
+            rel_width: current.rel_width,
+            rel_height: current.rel_height,
+            rel_x: current.rel_x,
+            rel_y: current.rel_y,
+            opacity: value,
+            layer: current.layer,
+        };
+    }
+    
+    //设置层级
+    public function set_component_layer(index: int, value: int) {
+        if (!is_valid_index(index)) {
+            return;
+        }
+        let current = Callback_Factory.components[index];
+        Callback_Factory.components[index] = {
+            color: current.color,
+            rel_width: current.rel_width,
+            rel_height: current.rel_height,
+            rel_x: current.rel_x,
+            rel_y: current.rel_y,
+            opacity: current.opacity,
+            layer: value,
+        };
+    }
+
+    //设置背景颜色
+    public function set_component_color(index: int, color_value: brush) {
+        if (!is_valid_index(index)) {
+            return;
+        }
+        let current = Callback_Factory.components[index];
+        Callback_Factory.components[index] = {
+            color: color_value,
+            rel_width: current.rel_width,
+            rel_height: current.rel_height,
+            rel_x: current.rel_x,
+            rel_y: current.rel_y,
+            opacity: current.opacity,
+            layer: current.layer,
+        };
+    }
+
+    VerticalLayout {
+        spacing: 5px;
+        Text {
+            text: "属性面板";
+            color: white;
+            font-size: Callback_Factory.font_size * 2px;
+        }
+
+        Text {
+            text: has_selection ? "当前组件 #" + Callback_Factory.current_component_index : "请选择组件"; 
+            color: #cfd8ff;
+            font-size: Callback_Factory.font_size * 2px;
+        }
+
+        // 宽度 (百分比 0-100)
+                Text {
+            text: "宽度 (%)";
+            color: #8aa0ff;
+            font-size: Callback_Factory.font_size * 1px;
+        }
+
+        Slider {
+            enabled: has_selection;
+            minimum: 1; // 最小宽度 1%
+                    maximum: 100;
+            step: 0.1;
+            value: has_selection ? Callback_Factory.components[Callback_Factory.current_component_index].rel_width * 100 : 0;
+            changed(value) => {
+                set_component_rel_width(Callback_Factory.current_component_index, value / 100);
+            }
+        }
+
+        // 高度 (百分比 0-100)
+                Text {
+            text: "高度 (%)";
+            color: #8aa0ff;
+            font-size: Callback_Factory.font_size * 1px;
+        }
+
+        Slider {
+            enabled: has_selection;
+            minimum: 1; // 最小高度 1%
+                    maximum: 100;
+            step: 0.1;
+            value: has_selection ? Callback_Factory.components[Callback_Factory.current_component_index].rel_height * 100 : 0;
+            changed(value) => {
+                set_component_rel_height(Callback_Factory.current_component_index, value / 100);
+            }
+        }
+
+        Text {
+            text: "透明度";
+            color: #8aa0ff;
+            font-size: Callback_Factory.font_size * 1px;
+        }
+
+        Slider {
+            enabled: has_selection;
+            minimum: 0.0;
+            maximum: 1.0;
+            step: 0.01;
+            value: has_selection ? Callback_Factory.components[Callback_Factory.current_component_index].opacity : 1.0;
+            changed(value) => {
+                set_component_opacity(Callback_Factory.current_component_index, value);
+            }
+        }
+
+        Text {
+            text: "层级";
+            color: #8aa0ff;
+            font-size: Callback_Factory.font_size * 1px;
+        }
+
+        SpinBox {
+            enabled: has_selection;
+            minimum: -10;
+            maximum: 10;
+            value: has_selection ? Callback_Factory.components[Callback_Factory.current_component_index].layer : 0;
+            edited(value) => {
+                set_component_layer(Callback_Factory.current_component_index, value);
+            }
+        }
+
+        Text {
+            text: "颜色";
+            color: #8aa0ff;
+            font-size: Callback_Factory.font_size * 1px;
+        }
+
+        HorizontalLayout {
+            spacing: 6px;
+            for palette_color[i] in palette_colors: Rectangle {
+                width: 26px;
+                height: 26px; 
+                        // radius: 6px;
+                        background: palette_color;
+                border-width: 2px;
+                border-color: has_selection && Callback_Factory.components[Callback_Factory.current_component_index].color == palette_color ? #ffd54f : #444a63;
+
+                TouchArea {
+                    enabled: has_selection;
+                    clicked => {
+                        set_component_color(Callback_Factory.current_component_index, palette_color);
+                    }
+                }
+            }
+        }
+    }
+}
