@@ -52,7 +52,8 @@ export component Base_Component inherits Rectangle {
     y: props.container_height * props.rel_y;
     width: props.container_width * props.rel_width;
     height: props.container_height * props.rel_height;
-    background: props.background_color;
+    // background: props.background_color;
+    background: transparent; 
     opacity: props.opacity_value;
     border-width: root.is_selected ? 2px : 1px;
     border-color: root.is_selected ? #ffd54f : #808080;
@@ -71,6 +72,7 @@ export component Base_Component inherits Rectangle {
     function update_component_attributes(x: float ,y: float) {
         let current = Callback_Factory.components[root.props.container-index];
         Callback_Factory.components[root.props.container-index] = {
+            type: current.type,
             color: current.color,
             rel_width: current.rel_width,
             rel_height: current.rel-height,
@@ -116,7 +118,7 @@ export component Base_Component inherits Rectangle {
                 // root.props.rel_y = Math.max(0.0, Math.min(1.0 - root.props.rel_height, root.props.rel_y + delta_rel_y));
                 let new_rel_x = Math.max(0.0, Math.min(1.0 - root.props.rel_width, root.props.rel_x + delta_rel_x));
                 let new_rel_y = Math.max(0.0, Math.min(1.0 - root.props.rel_height, root.props.rel_y + delta_rel_y));
-                // debug("Component " + root.props.container_index + " moved to (" + new_rel_x + ", " + new_rel_y + ")");
+                debug("Component " + root.props.container_index + " moved to (" + new_rel_x + ", " + new_rel_y + ")");
                 update_component_attributes(new_rel_x, new_rel_y);
 
             }

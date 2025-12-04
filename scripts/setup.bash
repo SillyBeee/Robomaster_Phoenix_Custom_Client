@@ -5,7 +5,7 @@ set -e
 # ...existing code...
 # 更新 apt 并安装系统依赖（Paho C 使用 apt 安装，其他库也用 apt）
 echo "更新 apt 并安装系统依赖..."
-# sudo apt update
+sudo apt update
 sudo apt install -y build-essential cmake git wget tar pkg-config \
   libssl-dev libopencv-dev libsdl2-dev libspdlog-dev \
   nlohmann-json3-dev protobuf-compiler libprotobuf-dev \

@@ -11,13 +11,13 @@
       "layer": 0
     },
     {
-      "type": "base",
+      "type": "health_bar",
       "rel_x": 0.3,
       "rel_y": 0.1,
       "rel_width": 0.4,
       "rel_height": 0.1,
       "color": "#FFFFFF",
-      "opacity": 1.0,
+      "opacity": 0.1,
       "layer": 1
     },
     {

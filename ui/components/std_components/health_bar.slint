@@ -1,0 +1,75 @@
+import { Base_Component, ComponentProps } from "../base_component.slint";
+
+export component Health_Bar {
+    // ============================================
+    // 1. 属性透传 (必须)
+    // ============================================
+    // 因为是组合模式，必须手动接收并传递基类需要的属性
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+
+    // ============================================
+    // 2. 组件特有属性 (自定义)
+    // ============================================
+    in property <float> current_hp: 60.0;
+    in property <float> max_hp: 100.0;
+    in property <brush> bar_color: #ff4444; // 血条颜色
+
+    // ============================================
+    // 3. 组合基组件 (作为根节点)
+    // ============================================
+    Base_Component {
+        // 绑定透传属性
+        props: root.props;
+        is_selected: root.is_selected;
+
+        // 钩子函数示例 (可选)
+        on_mouse_pressed => {
+            debug("Health Bar Clicked!");
+        }
+
+        // ============================================
+        // 4. 绘制具体画面 (@children 内容)
+        // ============================================
+        // 注意：这里的坐标系是相对于 Base_Component 的 (0,0) 开始
+        // 且宽高会自动填满 Base_Component
+        
+        Rectangle {
+            // 背景槽
+            width: 100%;
+            height: 100%;
+            background: #333333;
+            border-radius: 4px;
+            clip: true; // 裁剪溢出内容
+
+            // 动态血条
+            Rectangle {
+                x: 0;
+                y: 0;
+                // 计算宽度百分比
+                width: parent.width * (root.current_hp / root.max_hp);
+                height: 100%;
+                background: root.bar_color;
+                
+                // 简单的动画效果
+                animate width { duration: 200ms; easing: ease-out; }
+            }
+
+            // 文字显示
+            Text {
+                text: Math.round(root.current_hp) + " / " + Math.round(root.max_hp);
+                color: white;
+                font-size: root.props.container_height * 0.6; // 字体随高度自适应
+                x: parent.width / 2 - self.width / 2;
+                y: parent.height / 2 - self.height / 2;
+            }
+            
+            // 选中时的额外高亮 (可选，因为基类已有边框)
+            if (root.is_selected) : Rectangle {
+                border-width: 1px;
+                border-color: white;
+                opacity: 0.3;
+            }
+        }
+    }
+}

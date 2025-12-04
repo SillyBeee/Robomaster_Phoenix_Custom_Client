@@ -1,40 +1,53 @@
 import { Base_Component, ComponentProps } from "base_component.slint";
+// 引入具体的子组件
+import { Health_Bar } from "std_components/health_bar.slint"; 
 import { Callback_Factory } from "../callback_factory.slint";
 
 export component Component_Render inherits Rectangle {
-    // 作为一个透明容器，填满父级
     width: 100%;
     height: 100%;
     background: transparent;
     clip: true; // 防止子组件拖出边界
 
-    // 在这里进行遍历生成
-    for comp[i] in Callback_Factory.components: Base_Component {
-        // 构造结构体传递给 Base_Component
-        props: {
-            // 上下文数据 (使用 root.width/height，即当前容器的大小)
+    // 遍历生成：使用 Rectangle 作为通用包装器
+    for comp[i] in Callback_Factory.components: Rectangle {
+        width: 100%;
+        height: 100%;
+        
+        // 1. 提取公共属性 (避免在每个 if 分支里重复写)
+        property <ComponentProps> item_props: {
             container_width: root.width,
             container_height: root.height,
             container_index: i,
-
-            // 核心数据 (来自模型)
             rel_x: comp.rel_x,
             rel_y: comp.rel_y,
             rel_width: comp.rel_width,
             rel_height: comp.rel_height,
-            
-            // 外观数据
             background_color: comp.color,       
             opacity_value: comp.opacity,
             layer: comp.layer,
         };
         
-        // 选中状态判断
-        is_selected: i == Callback_Factory.current_component_index;
+        property <bool> item_selected: i == Callback_Factory.current_component_index;
+
+        // ==========================================
+        // 2. 类型分发 (Type Dispatching)
+        // ==========================================
+
+        // 类型 A: 基础组件 (默认)
+        if (comp.type == "base" || comp.type == "") : Base_Component {
+            props: parent.item_props;
+            is_selected: parent.item_selected;
+        }
+
+        // 类型 B: 血条组件
+        if (comp.type == "health_bar") : Health_Bar {
+            props: parent.item_props;
+            is_selected: parent.item_selected;
+            // 如果有特有数据，可以在这里绑定
+            // current_hp: 80; 
+        }
         
-        // 未来可以在这里根据 comp.type 添加 if/else 逻辑
-        // 但由于 Slint 的限制，for 循环内只能生成一种类型的组件。
-        // 如果要支持多种类型，通常的做法是 Base_Component 内部再包含一个 switch 逻辑，
-        // 或者在这里使用 if (comp.type == "A") : CompA {} if (comp.type == "B") : CompB {}
+        // 类型 C: 其他组件...
     }
 }
