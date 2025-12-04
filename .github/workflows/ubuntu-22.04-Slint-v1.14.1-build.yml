@@ -9,45 +9,35 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
             
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build in Docker container
+      - name: Install Dependencies & Build
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/github/repos/Robomaster_Phoenix_Custom_Client" \
-            --user "$(id -u):$(id -g)" \
-            custom_client_ubuntu2204_slint1.14.1 \
-            bash -c "
-              set -e
-              echo
-              echo 'starting build process'
-              echo
-      
-              cd /github/repos/Robomaster_Phoenix_Custom_Client
-              echo
-              echo 'entered repo directory'
-              echo
+          set -e
+          echo
+          echo 'starting build process'
+          echo
 
-              echo
-              echo 'starting installing deps'
-              echo
-              chmod +x scripts/setup.bash || true
-              sudo bash scripts/setup.bash
+          echo
+          echo 'starting installing deps'
+          echo
+          chmod +x scripts/setup.bash || true
+          # 使用 sudo 安装依赖
+          sudo bash scripts/setup.bash
 
-              rm -rf build
-              echo
-              echo 'old build files removed'
-              echo
-              
-              mkdir build
-              cd build 
-              cmake .. 
-              make -j
-              echo
-              echo 'build completed successfully'
-              echo
-            "
+          rm -rf build
+          echo
+          echo 'old build files removed'
+          echo
+          
+          mkdir build
+          cd build 
+          cmake .. 
+          make -j$(nproc) # 使用 nproc 自动获取核心数
+          echo
+          echo 'build completed successfully'
+          echo

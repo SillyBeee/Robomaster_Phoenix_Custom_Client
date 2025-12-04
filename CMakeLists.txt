@@ -61,3 +61,5 @@ ${SWSCALE_LIBRARIES}
 if (WIN32)
     add_custom_command(TARGET RM_Client POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:my_application> $<TARGET_FILE_DIR:my_application> COMMAND_EXPAND_LISTS)
 endif()
+
+add_compile_definitions(PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")

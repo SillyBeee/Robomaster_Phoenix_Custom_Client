@@ -1,3 +1,15 @@
+
+export struct ComponentData {
+    type: string,
+    color: brush,
+    rel_width: float,
+    rel_height: float,
+    rel_x: float,
+    rel_y: float,
+    opacity: float,
+    layer: int,
+}
+
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
 export global Callback_Factory{
     // 全局变量
@@ -9,18 +21,9 @@ export global Callback_Factory{
     in-out property <int> current_component_index: -1; //当前选中组件索引
 
     // 组件数据模型 (全部使用相对百分比)
-    in-out property<[{
-        color: brush,
-        rel_width: float,
-        rel_height: float,
-        rel_x: float,
-        rel_y: float,
-        opacity: float,
-        layer: int,
-    }]> components: [
-        { color: #44ffaa, rel_width: 0.2, rel_height: 0.1, rel_x: 0.1, rel_y: 0.1, opacity: 0.9, layer: 0 },
-        { color: #ff8844, rel_width: 0.2, rel_height: 0.2, rel_x: 0.4, rel_y: 0.3, opacity: 1.0, layer: 1 },
-    ];
+
+
+    in-out property <[ComponentData]> components: [];
     
     //全局回调
     callback open-url(string);

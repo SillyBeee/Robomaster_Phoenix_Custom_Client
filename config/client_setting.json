@@ -1,0 +1,5 @@
+{
+    "resolution": [2560, 1440],
+    "port": "/dev/ttyACM0",
+    "baudrate": 921600
+}
