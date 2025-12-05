@@ -69,6 +69,9 @@ void SaveComponents(const Callback_Factory& factory,const  std::string& config_p
                                     static_cast<int>(data->color.color().red()),
                                     static_cast<int>(data->color.color().green()),
                                     static_cast<int>(data->color.color().blue()));
+        if(data->color.color().alpha()==0){
+            config.color = "transparent";
+        }
         config.opacity = data->opacity;
         config.layer = data->layer;
         configs.push_back(config);
