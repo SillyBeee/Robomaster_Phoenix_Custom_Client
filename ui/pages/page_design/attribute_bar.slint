@@ -22,6 +22,7 @@ export component Attribute_Bar inherits Rectangle {
         }
         let current = Callback_Factory.components[index];
         Callback_Factory.components[index] = {
+            type: current.type,
             color: current.color,
             rel_width: value,
             rel_height: current.rel_height,
@@ -39,6 +40,7 @@ export component Attribute_Bar inherits Rectangle {
         }
         let current = Callback_Factory.components[index];
         Callback_Factory.components[index] = {
+            type: current.type,
             color: current.color,
             rel_width: current.rel_width,
             rel_height: value,
@@ -56,6 +58,7 @@ export component Attribute_Bar inherits Rectangle {
         }
         let current = Callback_Factory.components[index];
         Callback_Factory.components[index] = {
+            type: current.type,
             color: current.color,
             rel_width: current.rel_width,
             rel_height: current.rel_height,
@@ -73,6 +76,7 @@ export component Attribute_Bar inherits Rectangle {
         }
         let current = Callback_Factory.components[index];
         Callback_Factory.components[index] = {
+            type: current.type,
             color: current.color,
             rel_width: current.rel_width,
             rel_height: current.rel_height,
@@ -90,6 +94,7 @@ export component Attribute_Bar inherits Rectangle {
         }
         let current = Callback_Factory.components[index];
         Callback_Factory.components[index] = {
+            type: current.type,
             color: color_value,
             rel_width: current.rel_width,
             rel_height: current.rel_height,

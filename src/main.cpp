@@ -37,6 +37,7 @@ int main()
     std::filesystem::path components_path = source_path / "config" / "config.json";
     LoadSettings(callback_factory, config_path.string());
     LoadComponents(callback_factory, components_path.string());
+    pose_test_slider(callback_factory);
 
     drivers::GamePad gamepad;
     drivers::MqttClient mqtt_client("127.0.0.1");

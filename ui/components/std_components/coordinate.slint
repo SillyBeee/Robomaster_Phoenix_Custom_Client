@@ -1,0 +1,182 @@
+import { ComponentProps } from "../base_component.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
+
+export component Coordinate_3D inherits Rectangle {
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+
+    // ============================================
+    // 1. 物体姿态 (Object Pose) - 也就是你要显示的数据
+    // ============================================
+    in property <float> roll: Callback_Factory.current_pose.roll;
+    in property <float> pitch: Callback_Factory.current_pose.pitch;
+    in property <float> yaw: Callback_Factory.current_pose.yaw;
+
+    // ============================================
+    // 2. 相机视角 (Camera View) - 控制观察角度
+    // ============================================
+    // cam_pitch: 0 表示平视，-90 表示从头顶垂直向下看，90 表示从下往上看
+    // cam_yaw:   旋转场景
+    // 推荐默认值：pitch -30, yaw 45 可以看到比较标准的 3D 效果
+    in property <float> cam_pitch: -30; 
+    in property <float> cam_yaw: 45;
+
+    // 轴长度 & 箭头
+    in property <float> axis_length_ratio: 0.4;
+    in property <float> arrow_size: 8.0;
+
+    background: transparent;
+    
+    // ============================================
+    // 数学计算逻辑
+    // ============================================
+    
+    // --- A. 预计算三角函数 ---
+    
+    // 物体旋转 (Object Rotation)
+    property <float> cr: Math.cos(root.roll * 1deg);
+    property <float> sr: Math.sin(root.roll * 1deg);
+    property <float> cp: Math.cos(root.pitch * 1deg);
+    property <float> sp: Math.sin(root.pitch * 1deg);
+    property <float> cy: Math.cos(root.yaw * 1deg);
+    property <float> sy: Math.sin(root.yaw * 1deg);
+
+    // 相机旋转 (Camera Rotation)
+    property <float> v_cp: Math.cos(root.cam_pitch * 1deg);
+    property <float> v_sp: Math.sin(root.cam_pitch * 1deg);
+    property <float> v_cy: Math.cos(root.cam_yaw * 1deg);
+    property <float> v_sy: Math.sin(root.cam_yaw * 1deg);
+
+    // 基础尺寸
+    property <float> len: Math.min(root.width, root.height) * root.axis_length_ratio / 1px;
+    property <float> cx: root.width / 2 / 1px;
+    property <float> cy_center: root.height / 2 / 1px;
+
+    // --- B. 计算物体坐标轴的 3D 向量 (World Coordinates) ---
+    // 这是一个标准的 RPY 旋转矩阵应用在基向量上
+    
+    // X轴 (1,0,0) 旋转后的 3D 坐标
+    property <float> wx_x: cp * cy;
+    property <float> wx_y: cp * sy;
+    property <float> wx_z: -sp;
+
+    // Y轴 (0,1,0) 旋转后的 3D 坐标
+    property <float> wy_x: sr * sp * cy - cr * sy;
+    property <float> wy_y: sr * sp * sy + cr * cy;
+    property <float> wy_z: sr * cp;
+
+    // Z轴 (0,0,1) 旋转后的 3D 坐标
+    property <float> wz_x: cr * sp * cy + sr * sy;
+    property <float> wz_y: cr * sp * sy - sr * cy;
+    property <float> wz_z: cr * cp;
+
+    // --- C. 3D 到 2D 的投影变换 (Projection) ---
+    // 公式：先绕 Z 轴旋转 cam_yaw，再绕 X 轴旋转 cam_pitch
+    // ScreenX = x * cos(vy) - y * sin(vy)
+    // ScreenY = -(z * cos(vp) + (x * sin(vy) + y * cos(vy)) * sin(vp))  <-- 注意 Y 轴取反适应屏幕
+    
+    // X轴 投影后
+    property <float> px_x: root.wx_x * root.v_cy - root.wx_y * root.v_sy;
+    property <float> px_y: -(root.wx_z * root.v_cp + (root.wx_x * root.v_sy + root.wx_y * root.v_cy) * root.v_sp);
+
+    // Y轴 投影后
+    property <float> py_x: root.wy_x * root.v_cy - root.wy_y * root.v_sy;
+    property <float> py_y: -(root.wy_z * root.v_cp + (root.wy_x * root.v_sy + root.wy_y * root.v_cy) * root.v_sp);
+
+    // Z轴 投影后
+    property <float> pz_x: root.wz_x * root.v_cy - root.wz_y * root.v_sy;
+    property <float> pz_y: -(root.wz_z * root.v_cp + (root.wz_x * root.v_sy + root.wz_y * root.v_cy) * root.v_sp);
+
+    // --- D. 计算最终屏幕坐标 ---
+    property <float> end_x_x: cx + len * px_x;
+    property <float> end_x_y: cy_center + len * px_y; // 注意这里用加号，因为 px_y 已经包含了投影翻转
+
+    property <float> end_y_x: cx + len * py_x;
+    property <float> end_y_y: cy_center + len * py_y;
+
+    property <float> end_z_x: cx + len * pz_x;
+    property <float> end_z_y: cy_center + len * pz_y;
+
+    // 箭头参数
+    property <float> arr_back: root.arrow_size * 0.866;
+    property <float> arr_side: root.arrow_size * 0.5;
+
+    // ============================================
+    // 绘制 (使用 SVG commands)
+    // ============================================
+
+    // 原点
+    Rectangle {
+        x: root.cx * 1px - 3px;
+        y: root.cy_center * 1px - 3px;
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: white;
+        z: 10;
+    }
+
+    // --- X轴 (红色) ---
+    Path {
+        width: 100%; height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: root.width / 1px; viewbox-height: root.height / 1px;
+        stroke: #ff0000; stroke-width: 2px;
+        
+        commands: 
+            "M " + root.cx + " " + root.cy_center + 
+            " L " + root.end_x_x + " " + root.end_x_y +
+            " M " + root.end_x_x + " " + root.end_x_y +
+            " L " + (root.end_x_x - root.px_x * root.arr_back + root.px_y * root.arr_side) + " " + (root.end_x_y - root.px_y * root.arr_back - root.px_x * root.arr_side) +
+            " M " + root.end_x_x + " " + root.end_x_y +
+            " L " + (root.end_x_x - root.px_x * root.arr_back - root.px_y * root.arr_side) + " " + (root.end_x_y - root.px_y * root.arr_back + root.px_x * root.arr_side);
+    }
+    Text {
+        text: "X"; color: #ff0000;
+        x: root.end_x_x * 1px + 5px; y: root.end_x_y * 1px + 5px;
+    }
+
+    // --- Y轴 (绿色) ---
+    Path {
+        width: 100%; height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: root.width / 1px; viewbox-height: root.height / 1px;
+        stroke: #00ff00; stroke-width: 2px;
+        
+        commands: 
+            "M " + root.cx + " " + root.cy_center + 
+            " L " + root.end_y_x + " " + root.end_y_y +
+            " M " + root.end_y_x + " " + root.end_y_y +
+            " L " + (root.end_y_x - root.py_x * root.arr_back + root.py_y * root.arr_side) + " " + (root.end_y_y - root.py_y * root.arr_back - root.py_x * root.arr_side) +
+            " M " + root.end_y_x + " " + root.end_y_y +
+            " L " + (root.end_y_x - root.py_x * root.arr_back - root.py_y * root.arr_side) + " " + (root.end_y_y - root.py_y * root.arr_back + root.py_x * root.arr_side);
+    }
+    Text {
+        text: "Y"; color: #00ff00;
+        x: root.end_y_x * 1px + 5px; y: root.end_y_y * 1px + 5px;
+    }
+
+    // --- Z轴 (蓝色) ---
+    Path {
+        width: 100%; height: 100%;
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: root.width / 1px; viewbox-height: root.height / 1px;
+        stroke: #0088ff; stroke-width: 2px;
+        
+        commands: 
+            "M " + root.cx + " " + root.cy_center + 
+            " L " + root.end_z_x + " " + root.end_z_y +
+            " M " + root.end_z_x + " " + root.end_z_y +
+            " L " + (root.end_z_x - root.pz_x * root.arr_back + root.pz_y * root.arr_side) + " " + (root.end_z_y - root.pz_y * root.arr_back - root.pz_x * root.arr_side) +
+            " M " + root.end_z_x + " " + root.end_z_y +
+            " L " + (root.end_z_x - root.pz_x * root.arr_back - root.pz_y * root.arr_side) + " " + (root.end_z_y - root.pz_y * root.arr_back + root.pz_x * root.arr_side);
+    }
+    Text {
+        text: "Z"; color: #0088ff;
+        x: root.end_z_x * 1px + 5px; y: root.end_z_y * 1px + 5px;
+    }
+
+    if (root.is_selected) : Rectangle {
+        border-width: 1px; border-color: white; opacity: 0.3; background: transparent;
+    }
+}

@@ -9,6 +9,11 @@ void LoadSettings(const Callback_Factory& factory,const std::string& config_path
 void LoadComponents(const Callback_Factory& factory,std::string config_path="");
 
 static inline slint::Color HexToColor(const std::string &hex) {
+
+    if (hex == "transparent") {
+        return slint::Color::from_argb_uint8(0, 0, 0, 0);
+    }
+    
     std::string s = hex;
     if (s.rfind("#", 0) == 0) {
         s = s.substr(1);

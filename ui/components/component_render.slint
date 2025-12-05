@@ -1,21 +1,17 @@
 import { Base_Component, ComponentProps } from "base_component.slint";
-// 引入具体的子组件
-import { Health_Bar } from "std_components/health_bar.slint"; 
+import { Health_Bar_Content } from "std_components/health_bar.slint"; 
 import { Callback_Factory } from "../callback_factory.slint";
+import { Coordinate-3D } from "std_components/coordinate.slint";
 
 export component Component_Render inherits Rectangle {
     width: 100%;
     height: 100%;
     background: transparent;
-    clip: true; // 防止子组件拖出边界
+    clip: true;
 
-    // 遍历生成：使用 Rectangle 作为通用包装器
-    for comp[i] in Callback_Factory.components: Rectangle {
-        width: 100%;
-        height: 100%;
-        
-        // 1. 提取公共属性 (避免在每个 if 分支里重复写)
-        property <ComponentProps> item_props: {
+    for comp[i] in Callback_Factory.components: Base_Component {
+        // 1. 统一管理定位和交互 (Base_Component)
+        props: {
             container_width: root.width,
             container_height: root.height,
             container_index: i,
@@ -28,26 +24,32 @@ export component Component_Render inherits Rectangle {
             layer: comp.layer,
         };
         
-        property <bool> item_selected: i == Callback_Factory.current_component_index;
+        is_selected: i == Callback_Factory.current_component_index;
 
-        // ==========================================
-        // 2. 类型分发 (Type Dispatching)
-        // ==========================================
-
-        // 类型 A: 基础组件 (默认)
-        if (comp.type == "base" || comp.type == "") : Base_Component {
-            props: parent.item_props;
-            is_selected: parent.item_selected;
-        }
-
-        // 类型 B: 血条组件
-        if (comp.type == "health_bar") : Health_Bar {
-            props: parent.item_props;
-            is_selected: parent.item_selected;
-            // 如果有特有数据，可以在这里绑定
-            // current_hp: 80; 
-        }
+        // 2. 根据类型填充内容 (@children)
         
-        // 类型 C: 其他组件...
+        // 类型 A: 基础组件 (纯色块)
+        if (comp.type == "base" || comp.type == "") : Rectangle {
+            width: 100%;
+            height: 100%;
+            background: comp.color;
+            opacity: comp.opacity;
+        }
+
+        // 类型 B: 血条组件 (内容)
+        if (comp.type == "health_bar") : Health_Bar_Content {
+            // 只需要传数据，不需要管定位
+            props: parent.props; // 这里的 parent 是 Base_Component
+            is_selected: parent.is_selected;
+            // current_hp: ...
+        }
+
+        // 类型 C: 坐标系组件
+        if (comp.type == "coordinate") : Coordinate-3D {
+            props: parent.props;
+            is_selected: parent.is_selected;
+        }
+
+
     }
 }

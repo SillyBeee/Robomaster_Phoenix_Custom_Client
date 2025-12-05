@@ -1,4 +1,3 @@
-
 export struct ComponentData {
     type: string,
     color: brush,
@@ -8,6 +7,12 @@ export struct ComponentData {
     rel_y: float,
     opacity: float,
     layer: int,
+}
+
+export struct Pose{
+    roll: float,
+    pitch: float,
+    yaw: float,
 }
 
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
@@ -24,7 +29,9 @@ export global Callback_Factory{
 
 
     in-out property <[ComponentData]> components: [];
-    
+    in-out property <Pose> current_pose: {roll:0.0, pitch:0.0, yaw:0.0};
+
+
     //全局回调
     callback open-url(string);
     callback set_resolution(string);
