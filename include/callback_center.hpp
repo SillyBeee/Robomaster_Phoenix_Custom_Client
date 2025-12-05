@@ -11,6 +11,14 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
 void callback_set_fullscreen(slint::ComponentHandle<MainWindow>& window, bool is_fullscreen);
 
 
+
+
+
+
+
+
+
+
 // 全局变量用于存储滑动条的值
 static int g_roll = 1800;
 static int g_pitch = 1800;

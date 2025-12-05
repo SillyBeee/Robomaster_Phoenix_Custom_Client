@@ -1,34 +1,34 @@
 {
-"components": [
-    {
-      "type": "base",
-      "rel_x": 0.05,
-      "rel_y": 0.05,
-      "rel_width": 0.2,
-      "rel_height": 0.15,
-      "color": "#FF5733",
-      "opacity": 0.9,
-      "layer": 0
-    },
-    {
-      "type": "health_bar",
-      "rel_x": 0.3,
-      "rel_y": 0.1,
-      "rel_width": 0.4,
-      "rel_height": 0.1,
-      "color": "#FFFFFF",
-      "opacity": 0.1,
-      "layer": 1
-    },
-    {
-      "type": "coordinate",
-      "rel_x": 0.1,
-      "rel_y": 0.5,
-      "rel_width": 0.2,
-      "rel_height": 0.2,
-      "color": "transparent",
-      "opacity": 0.8,
-      "layer": 2
-    }
-  ]
+    "components": [
+        {
+            "color": "#FF5733",
+            "layer": 0,
+            "opacity": 0.8999999761581421,
+            "rel_height": 0.15000000596046448,
+            "rel_width": 0.20000000298023224,
+            "rel_x": 0.05000000074505806,
+            "rel_y": 0.05000000074505806,
+            "type": "base"
+        },
+        {
+            "color": "#FFFFFF",
+            "layer": 1,
+            "opacity": 0.10000000149011612,
+            "rel_height": 0.10000000149011612,
+            "rel_width": 0.20612499117851257,
+            "rel_x": 0.0,
+            "rel_y": 0.8999999761581421,
+            "type": "health_bar"
+        },
+        {
+            "color": "#000000",
+            "layer": 2,
+            "opacity": 0.800000011920929,
+            "rel_height": 0.20000000298023224,
+            "rel_width": 0.20000000298023224,
+            "rel_x": 0.7738072276115417,
+            "rel_y": 0.5639449954032898,
+            "type": "coordinate"
+        }
+    ]
 }

@@ -48,3 +48,35 @@ void LoadComponents(const Callback_Factory& factory,std::string config_path){
     factory.set_components(model);
     LOG_INFO("Loaded and set {} components to UI", slint_components_data.size());
 }
+
+
+void SaveComponents(const Callback_Factory& factory,const  std::string& config_path){
+    auto components_vector = factory.get_components();
+    size_t count = components_vector->row_count();
+    LOG_INFO("Saving {} components to JSON file", count);
+
+    ComponentJsonUtils utils;
+    std::vector<ComponentConfig> configs;
+    for(size_t i=0;i<count;++i){
+        auto data = components_vector->row_data(i);
+        ComponentConfig config;
+        config.type = data->type;
+        config.rel_x = data->rel_x;
+        config.rel_y = data->rel_y;
+        config.rel_width = data->rel_width;
+        config.rel_height = data->rel_height;
+        config.color = std::format("#{:02X}{:02X}{:02X}",
+                                    static_cast<int>(data->color.color().red()),
+                                    static_cast<int>(data->color.color().green()),
+                                    static_cast<int>(data->color.color().blue()));
+        config.opacity = data->opacity;
+        config.layer = data->layer;
+        configs.push_back(config);
+    }
+    utils.SetConfig(configs);
+    if(!utils.SaveJsonToFile(config_path)){
+        LOG_ERROR("Failed to save components configuration to {}", config_path);
+        return; 
+    }
+    LOG_INFO("Successfully saved {} components to {}", configs.size(), config_path);
+}

@@ -15,8 +15,11 @@
 int main()
 {
     auto main_window = MainWindow::create();
-
     auto& callback_factory = main_window->global<Callback_Factory>();
+    //加载参数
+    std::filesystem::path source_path(PROJECT_SOURCE_DIR);
+    std::filesystem::path config_path = source_path / "config" / "client_setting.json";
+    std::filesystem::path components_path = source_path / "config" / "config.json";
 
     callback_factory.on_open_url(
         [](slint::SharedString url)
@@ -31,10 +34,11 @@ int main()
     callback_factory.on_set_fullscreen([&main_window](bool is_fullscreen)
                                        { callback_set_fullscreen(main_window, is_fullscreen); });
 
-    //加载参数
-    std::filesystem::path source_path(PROJECT_SOURCE_DIR);
-    std::filesystem::path config_path = source_path / "config" / "client_setting.json";
-    std::filesystem::path components_path = source_path / "config" / "config.json";
+    callback_factory.on_save_to_json([&callback_factory , &components_path](){
+        SaveComponents(callback_factory,components_path.string());
+    });
+
+    
     LoadSettings(callback_factory, config_path.string());
     LoadComponents(callback_factory, components_path.string());
     pose_test_slider(callback_factory);

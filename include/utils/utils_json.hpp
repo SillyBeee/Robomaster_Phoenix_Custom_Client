@@ -193,6 +193,11 @@ public:
         return config_;
     }
 
+    void SetConfig(const std::vector<ComponentConfig>& configs)
+    {
+        config_ = configs;
+    }
+
 private:
     // 修改成员变量类型为 vector
     std::vector<ComponentConfig> config_;

@@ -7,6 +7,7 @@
 
 void LoadSettings(const Callback_Factory& factory,const std::string& config_path="");
 void LoadComponents(const Callback_Factory& factory,std::string config_path="");
+void SaveComponents(const Callback_Factory& factory,const  std::string& config_path="");
 
 static inline slint::Color HexToColor(const std::string &hex) {
 

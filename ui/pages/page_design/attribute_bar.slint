@@ -1,5 +1,5 @@
 import { Callback_Factory } from "../../callback_factory.slint";
-import { Slider, SpinBox } from "std-widgets.slint";
+import { Slider, SpinBox, Button } from "std-widgets.slint";
 //属性栏
 export component Attribute_Bar inherits Rectangle {
     width: 240px;
@@ -117,6 +117,14 @@ export component Attribute_Bar inherits Rectangle {
             text: has_selection ? "当前组件 #" + Callback_Factory.current_component_index : "请选择组件"; 
             color: #cfd8ff;
             font-size: Callback_Factory.font_size * 2px;
+        }
+
+        Button {
+            text: "save";
+            enabled: has_selection;
+            clicked => {
+                Callback_Factory.save_to_json();
+            }
         }
 
         // 宽度 (百分比 0-100)
