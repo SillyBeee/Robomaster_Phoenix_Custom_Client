@@ -1,8 +1,8 @@
 import { Base_Component, ComponentProps } from "base_component.slint";
-import { Health_Bar_Content } from "std_components/health_bar.slint"; 
+import { HealthBar} from "std_components/health_bar.slint"; 
 import { Callback_Factory } from "../callback_factory.slint";
 import { Coordinate-3D } from "std_components/coordinate.slint";
-
+import { Sight } from "std_components/sight.slint";
 export component Component_Render inherits Rectangle {
     width: 100%;
     height: 100%;
@@ -37,7 +37,7 @@ export component Component_Render inherits Rectangle {
         }
 
         // 类型 B: 血条组件 (内容)
-        if (comp.type == "health_bar") : Health_Bar_Content {
+        if (comp.type == "health_bar") : HealthBar {
             // 只需要传数据，不需要管定位
             props: parent.props; // 这里的 parent 是 Base_Component
             is_selected: parent.is_selected;
@@ -46,6 +46,12 @@ export component Component_Render inherits Rectangle {
 
         // 类型 C: 坐标系组件
         if (comp.type == "coordinate") : Coordinate-3D {
+            props: parent.props;
+            is_selected: parent.is_selected;
+        }
+
+        // 类型 D: 准心组件
+        if (comp.type == "sight") : Sight {
             props: parent.props;
             is_selected: parent.is_selected;
         }

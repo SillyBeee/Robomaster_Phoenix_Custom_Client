@@ -1,0 +1,164 @@
+import { ComponentProps } from "../base_component.slint";
+import {
+    Callback_Factory,
+    Callback-Factory,
+} from "../../callback_factory.slint";
+
+// 准心组件
+export component Sight inherits Rectangle {
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+    
+    // --- 调整参数以匹配图片风格 ---
+    // 准心十字大小
+    // in property <float> sight_size: 20.0;
+    in property <float> sight_size: Callback-Factory.font_size * 2.0;
+    // 圆弧半径 (图片中很大，设为 250 或更大)
+    // in property <float> radius: 250; 
+    in property <float> radius: Callback-Factory.font_size * 20.0;
+    // 圆弧张角 (控制圆弧的长度)
+    in property <float> sight_angle: 35;
+
+    background: transparent;
+
+    property <float> center_x: root.width / 2 / 1px;
+    property <float> center_y: root.height / 2 / 1px;
+
+    // ============================================
+    //  中心粗圆环 
+    // ============================================
+    Rectangle {
+        width: sight_size * 5px;
+        height: sight_size * 5px;
+        x: root.center_x * 1px - self.width / 2;
+        y: root.center_y * 1px - self.height / 2;
+        border-radius: self.width / 2; // 变成圆形
+        border-width: 6px;             // 粗边框
+        border-color: #808080;
+        background: transparent;
+        opacity: 0.6;                  // 较低透明度
+    }
+
+    // ============================================
+    //  基础十字准心 (保留)
+    // ============================================
+    // 水平短线
+    Rectangle {
+        x: root.width / 2 - (root.sight_size / 2 * 1px);
+        y: root.height / 2 - 1px; // 微调居中
+        width: root.sight_size * 1px;
+        height: 2px;
+        background: #e0e0e0; // 稍微亮一点
+    }
+
+    // 垂直短线
+    Rectangle {
+        x: root.width / 2 - 1px;
+        y: root.height / 2 - (root.sight_size / 2 * 1px);
+        width: 2px;
+        height: root.sight_size * 1px;
+        background: #e0e0e0;
+    }
+
+    // ============================================
+    // 左右大圆弧 (Path)
+    // ============================================
+    Path {
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: root.width / 1px;
+        viewbox-height: root.height / 1px;
+        stroke: #808080;
+        stroke-width: 2px;
+
+        // --- 右侧圆弧 ---
+        MoveTo {
+            x: root.center_x + root.radius * Math.cos((root.sight_angle) * 1deg);
+            y: root.center_y + root.radius * Math.sin((root.sight_angle) * 1deg);
+        }
+
+        ArcTo {
+            radius-x: root.radius;
+            radius-y: root.radius;
+            x: root.center_x + root.radius * Math.cos((-root.sight_angle) * 1deg);
+            y: root.center_y + root.radius * Math.sin((-root.sight_angle) * 1deg);
+            sweep: false; // 默认逆时针，向右凸
+        }
+
+        // --- 左侧圆弧 ---
+        MoveTo {
+            x: root.center_x - root.radius * Math.cos((root.sight_angle) * 1deg);
+            y: root.center_y + root.radius * Math.sin((root.sight_angle) * 1deg);
+        }
+
+        ArcTo {
+            radius-x: root.radius;
+            radius-y: root.radius;
+            x: root.center_x - root.radius * Math.cos((-root.sight_angle) * 1deg);
+            y: root.center_y + root.radius * Math.sin((-root.sight_angle) * 1deg);
+            sweep: true; // 向左凸
+        }
+    }
+
+    // ============================================
+    // 右侧数据面板 (新增)
+    // ============================================
+    Rectangle {
+        // 定位在右侧圆弧的右边一点
+        x: (root.center_x + root.radius) * 1px + 5px;
+        y: root.center_y * 1px - self.height / 2;
+        width: sight_size * 5.5px;
+        height: sight_size * 7px;
+
+        // 背景样式
+        background: #40404080; // 深灰色半透明
+        border-radius: 4px;
+        // 左边框高亮一点，模仿图片风格
+        border-width: 0px; 
+        
+
+
+        VerticalLayout {
+            padding: 5px;
+            spacing: 2px;
+            alignment: center;
+
+            Text {
+                text: "机构1射速"; 
+                font-size: sight_size * 1px;
+                color: #aaaaaa;
+                horizontal-alignment: center;
+            }
+
+            Text { 
+                // 这里可以绑定实际数据，例如 Callback_Factory.shoot_speed
+                text: "0";
+                font-size: sight_size * 1px;
+                color: white;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            Rectangle {
+                height: 2px;
+                background: transparent;
+            } // 占位间隔
+
+            Text {
+                text: "发弹量"; 
+                font-size: sight_size * 1px;
+                color: #aaaaaa;
+                horizontal-alignment: center;
+            }
+
+            Text { 
+                // 这里可以绑定实际数据
+                text: "0";
+                font-size: sight_size * 1px;
+                color: white;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}

@@ -41,7 +41,7 @@ int main()
     
     LoadSettings(callback_factory, config_path.string());
     LoadComponents(callback_factory, components_path.string());
-    pose_test_slider(callback_factory);
+    // pose_test_slider(callback_factory);
 
     drivers::GamePad gamepad;
     drivers::MqttClient mqtt_client("127.0.0.1");
