@@ -1,3 +1,4 @@
+import { Pose_slint,GameStatus_slint,GlobalUnitStatus_slint,RobotDynamicStatus_slint,RobotStaticStatus_slint } from "referee_data_struct.slint";
 export struct ComponentData {
     type: string,
     color: brush,
@@ -9,11 +10,11 @@ export struct ComponentData {
     layer: int,
 }
 
-export struct Pose{
-    roll: float,
-    pitch: float,
-    yaw: float,
-}
+
+
+
+
+
 
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
 export global Callback_Factory{
@@ -26,10 +27,16 @@ export global Callback_Factory{
     in-out property <int> current_component_index: -1; //当前选中组件索引
 
     // 组件数据模型 (全部使用相对百分比)
-
-
     in-out property <[ComponentData]> components: [];
-    in-out property <Pose> current_pose: {roll:0.0, pitch:0.0, yaw:0.0};
+
+    //后端裁判系统与机器人数据
+    in-out property <Pose_slint> current_pose: {roll:0.0, pitch:0.0, yaw:0.0};
+    in-out property <GameStatus_slint> game_status;
+    in-out property <GlobalUnitStatus_slint> global_unit_status;
+    in-out property <RobotStaticStatus-slint> robot_static_status;
+    in-out property <RobotDynamicStatus-slint> robot_dynamic_status;
+
+    
 
 
     //全局回调

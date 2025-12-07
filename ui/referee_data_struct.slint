@@ -1,0 +1,202 @@
+//这里只写了接收部分结构体与slint前端需要持续使用到的字段
+
+//为区分slint与外部数据结构，使用类型_slint 后缀,表示slint内部的类型,防止与外部类型名冲突
+//目前该文件的结构体是预计使用的结构体，实际使用的结构体详见callback_factory.slint中引入的部分
+
+// ============================================
+// 自定义数据结构(包括解析出来的数据和需要从裁判系统存储的数据)
+// ============================================
+export struct Pose_slint{
+    roll: float,
+    pitch: float,
+    yaw: float,
+}
+
+
+
+
+
+// ============================================
+// 裁判系统数据结构(接收)
+// ============================================
+export struct GameStatus_slint{
+    current_round: int,  //当前局数
+    total_round: int, //总局数
+    red_score: int, //红方分数
+    blue_score: int, //蓝方分数
+    current_stage: int, //当前阶段
+    stage_countdown_sec: int, //阶段倒计时秒
+    stage_elapsed_sec: int, //阶段已过秒
+    is_paused: bool, //是否暂停
+}
+
+
+export struct GlobalUnitStatus_slint{
+    base_hp: int, //基地当前血量
+    base_status: int, //基地状态   0:无敌 1:解除无敌，护甲未展开 2:解除无敌,护甲展开
+    base_shield_hp: int, //基地护盾血量
+    outpost_hp: int, //前哨站当前血量
+    outpost_status: int, //前哨站状态  0：无敌 1：存活，解除无敌，中部装甲旋转 2：存活，解除无敌，中部装甲停转 3：被击毁，不可重建 4：被击毁，可重建
+    robot_hp: [int], //所有机器人血量(先己方后对方)
+    robot_bullets_capacity: [int], //己方机器人发弾量
+    team_damage: int, //队伍总伤害
+    enemy_damage: int, //敌方总伤害
+}
+
+export struct GlobalLogisticsStatus_slint{
+    remaining_economy: int, //当前经济
+    total_economy_obtained: int, //总获得经济
+    tech_level: int, //科技等级(工程机器人曾装配最高难度)
+    encryption_level: int, //加密等级(雷达解析信息波机制)
+}
+
+export struct RobotRespawnStatus_slint{
+    is_pending_respawn: bool, //是否处于待复活状态
+    total_respawn_progress: int, //复活所需总读条
+    current_respawn_progress: int, //当前复活读条进度
+    can_free_respawn: bool, //是否可以免费复活
+    gold_cost_for_respawn: int, //花费金币复活所需金币数
+    can_pay_for_respawn: bool, //是否允许花费金币复活
+}
+
+export struct RobotStaticStatus_slint{
+    connection_state: int, //连接状态 (0=未连接, 1=已连接)
+    field_state: int, //上场状态 (0=已上场, 1=未上场)
+    alive_state: int, //存活状态 (0=未知, 1=存活, 2=战亡)
+    robot_id: int, //机器人编号
+    robot_type: int, //机器人类型
+    performance_system_shooter: int, //性能体系-发射机构 (1:冷却优先 2:爆发优先 3:英雄近战优先 4:英雄远程优先)
+    performance_system_chassis: int, //性能体系-底盘 (1:血量优先 2:功率优先 3:英雄近战优先 4:英雄远程优先)
+    level: int, //当前等级
+    max_health: int, //最大血量
+    max_heat: int, //最大热量
+    heat_cooldown_rate: float, //热量冷却速率 (每秒)
+    max_power: int, //最大功率
+    max_buffer_energy: int, //最大缓冲能量
+    max_chassis_energy: int, //最大底盘能量
+}
+
+
+export struct RobotDynamicStatus_slint{
+    current_health: int, //当前血量
+    current_heat: float, //当前热量
+    last_projectile_fire_rate: float, //上一次弹丸射速
+    current_chassis_energy: int, //当前剩余底盘能量
+    current_buffer_energy: int, //当前缓冲能量
+    current_experience: int, //当前经验值
+    experience_for_upgrade: int, //升级所需经验
+    total_projectiles_fired: int, //累计已发弹量
+    remaining_ammo: int, //剩余允许发弹量
+    is_out_of_combat: bool, //是否处于脱战状态
+    out_of_combat_countdown: int, //脱战状态倒计时
+    can_remote_heal: bool, //是否可以远程补血
+    can_remote_ammo: bool, //是否可以远程补弹
+}
+
+
+export struct RobotModuleStatus_slint{
+    power_manager: int, //电源管理模块状态 (0=离线, 1=在线)
+    rfid: int, //RFID 模块状态 (0=离线, 1=在线)
+    light_strip: int, //灯条模块状态 (0=离线, 1=在线)
+    small_shooter: int, //17mm 发射机构状态 (0=离线, 1=在线)
+    big_shooter: int, //42mm 发射机构状态 (0=离线, 1=在线)
+    uwb: int, //定位模块状态 (0=离线, 1=在线)
+    armor: int, //装甲模块状态 (0=离线, 1=在线)
+    video_transmission: int, //图传模块状态 (0=离线, 1=在线)
+    capacitor: int, //电容模块状态 (0=离线, 1=在线)
+    main_controller: int, //主控状态 (0=离线, 1=在线)
+}
+
+
+export struct Buff_slint{
+    robot_id: int, //机器人 ID
+    buff_type: int, //Buff 类型 (1:攻击 2:防御 3:冷却 4:功率 5:回血 6:发弹量 7:地形跨越)
+    buff_level: int, //Buff 增益值
+    buff_max_time: int, //Buff 最大剩余时间
+    buff_left_time: int, //Buff 剩余时间
+    msg_params: string, //额外文字参数
+}
+
+
+export struct PenaltyInfo_slint{
+    penalty_type: int, //当前受罚类型 (1:黄牌 2:双方黄牌 3:红牌 4:超功率 5:超热量 6:超射速)
+    penalty_effect_sec: int, //当前受罚效果时长 (秒)
+    total_penalty_num: int, //当前判罚数量
+}
+
+export struct TechCoreMotionStateSync_slint{
+    maximum_difficulty_level: int, //当前可选择的最高装配难度等级
+    status: int, //科技核心状态 (1:未进入装配状态 2:已选择难度移动中 3:首个步骤就绪 4:下一个步骤就绪 5:全部完成 6:确认装配移动中)
+}
+
+export struct RobotPerformanceSelectionSync_slint{
+    shooter: int, //发射机构性能体系
+    chassis: int, //底盘性能体系
+}
+
+export struct HeroDeployModeStatusSync_slint{
+    status: int, //模式 (0=退出, 1=进入)
+}
+
+export struct RuneStatusSync_slint{
+    rune_status: int, //当前能量机关状态枚举 (1:未激活 2:正在激活 3:已激活)
+    activated_arms: int, //当前已激活的灯臂数量
+    average_rings: int, //总环数
+}
+
+export struct SentinelStatusSync_slint{
+    posture_id: int, //姿态 ID (1:进攻姿态 2:防御姿态 3:移动姿态)
+    is_weakened: bool, //是否弱化
+}
+
+export struct DartSelectTargetStatusSync_slint{
+    target_id: int, //目标 ID
+    open: bool, //闸门状态
+}
+
+export struct GuardCtrlResult_slint{
+    command_id: int, //对应的指令编号
+    result_code: int, //执行结果码 (0:成功 其他:失败)
+}
+
+export struct AirSupportStatusSync_slint{
+    airsupport_status: int, //空中支援状态 (0:未进行 1:正在进行 2:被锁定无法开启)
+    left_time: int, //免费空中支援剩余时间
+    cost_coins: int, //付费空中支援已花费金币
+}
+
+
+// ============================================
+// 裁判系统数据结构(发送)                                                                                                                                                                                                                                                                           )
+// ============================================
+
+export struct AssemblyCommand_slint{
+    operation: int, //操作类型: 1-确认装配 2-取消装配
+    difficulty: int  //选中的装配难度
+}
+
+export struct RobotPerformanceSelectionCommand_slint{
+    shooter: int, //发射机构性能体系
+    chassis: int, //底盘性能体系
+}
+
+export struct HeroDeployModeEventCommand_slint{
+    mode: int, //模式 (0=退出, 1=进入)
+}
+
+export struct RuneActivateCommand_slint{
+    activate: int, //激活 (1=开启)
+}
+
+export struct DartCommand_slint{
+    target_id: int, //目标 ID (1:前哨站 2:基地固定目标 3:基地随机固定目标 4:基地随机移动目标 5:基地末端移动目标)
+    open: bool, //闸门开关
+}
+
+export struct GuardCtrlCommand_slint{
+    command_id: int, //指令编号 (1:补血点补弹 2:补给站实体补弹 3:远程补弹 4:远程回血 5:确认复活 6:确认花费金币复活 7:地图标点 8:切换为进攻姿态 9:切换为防御姿态 10:切换为移动姿态)
+}
+
+export struct AirSupportCommand_slint{
+    command_id: int, //指令类型 (1:免费呼叫空中支援 2:花费金币呼叫空中支援 3:中断空中支援)
+}

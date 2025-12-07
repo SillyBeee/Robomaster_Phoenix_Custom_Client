@@ -230,6 +230,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("GlobalUnitStatus JSON: {}", json);
+            
         } else {
             LOG_ERROR("Failed to parse GlobalUnitStatus message");
         }

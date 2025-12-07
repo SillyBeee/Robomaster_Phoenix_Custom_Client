@@ -35,7 +35,7 @@ static void on_trackbar_change(int, void*) {
     float y_deg = (g_yaw - 1800) / 10.0f;
 
 
-    Pose pose;
+    Pose_slint pose;
     pose.roll = r_deg ;
     pose.pitch = p_deg ;
     pose.yaw = y_deg ;

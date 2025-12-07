@@ -1,13 +1,22 @@
 import { ComponentProps } from "../base_component.slint";
 import {
-    Callback_Factory,
-    Callback-Factory,
+    Callback_Factory, Callback-Factory, Callback-Factory,
 } from "../../callback_factory.slint";
 
 // 准心组件
 export component Sight inherits Rectangle {
     in property <ComponentProps> props;
     in property <bool> is_selected;
+
+    // ============================================
+    //  数据面板显示数据
+    // ============================================
+    in property <int>  shoot_speed: Callback-Factory.robot_dynamic_status.last-projectile-fire-rate; // 射速
+    in property <int>  bullets_capacity:Callback-Factory.robot_dynamic_status.remaining-ammo ;   // 发弹量
+
+
+
+
     
     // --- 调整参数以匹配图片风格 ---
     // 准心十字大小
@@ -107,8 +116,8 @@ export component Sight inherits Rectangle {
         // 定位在右侧圆弧的右边一点
         x: (root.center_x + root.radius) * 1px + 5px;
         y: root.center_y * 1px - self.height / 2;
-        width: sight_size * 5.5px;
-        height: sight_size * 7px;
+        width: sight_size * 4.5px;
+        height: sight_size * 6px;
 
         // 背景样式
         background: #40404080; // 深灰色半透明
@@ -125,15 +134,15 @@ export component Sight inherits Rectangle {
 
             Text {
                 text: "机构1射速"; 
-                font-size: sight_size * 1px;
+                font-size: sight_size * 0.7px;
                 color: #aaaaaa;
                 horizontal-alignment: center;
             }
 
             Text { 
-                // 这里可以绑定实际数据，例如 Callback_Factory.shoot_speed
-                text: "0";
-                font-size: sight_size * 1px;
+                
+                text: "\{root.shoot_speed}";
+                font-size: sight_size * 0.7px;
                 color: white;
                 font-weight: 700;
                 horizontal-alignment: center;
@@ -146,15 +155,14 @@ export component Sight inherits Rectangle {
 
             Text {
                 text: "发弹量"; 
-                font-size: sight_size * 1px;
+                font-size: sight_size * 0.7px;
                 color: #aaaaaa;
                 horizontal-alignment: center;
             }
 
             Text { 
-                // 这里可以绑定实际数据
-                text: "0";
-                font-size: sight_size * 1px;
+                text: "\{root.bullets_capacity}";
+                font-size: sight_size * 0.7px;
                 color: white;
                 font-weight: 700;
                 horizontal-alignment: center;

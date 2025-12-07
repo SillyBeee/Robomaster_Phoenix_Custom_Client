@@ -9,6 +9,10 @@ void LoadSettings(const Callback_Factory& factory,const std::string& config_path
 void LoadComponents(const Callback_Factory& factory,std::string config_path="");
 void SaveComponents(const Callback_Factory& factory,const  std::string& config_path="");
 
+
+
+
+// 十六进制颜色字符串转换为 slint::Color工具函数
 static inline slint::Color HexToColor(const std::string &hex) {
 
     if (hex == "transparent") {
