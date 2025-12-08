@@ -6,6 +6,7 @@ import {
     RobotStaticStatus_slint,
     GlobalLogisticsStatus_slint,
     RobotRespawnStatus_slint,
+    RobotModuleStatus_slint
 } from "referee_data_struct.slint";
 
 
@@ -47,6 +48,7 @@ export global Callback_Factory {
     in-out property <RobotRespawnStatus-slint> robot_respawn_status;
     in-out property <RobotStaticStatus-slint> robot_static_status;
     in-out property <RobotDynamicStatus-slint> robot_dynamic_status;
+    in-out property <RobotModuleStatus-slint> robot_module_status;
 
     //全局回调
     callback open-url(string);

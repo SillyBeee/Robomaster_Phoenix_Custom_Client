@@ -1,0 +1,92 @@
+import { ComponentProps } from "../base_component.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
+
+// 定义地图上的单位结构
+export struct MapUnit {
+    x: float,      // 归一化坐标 0.0 - 1.0
+    y: float,      // 归一化坐标 0.0 - 1.0
+    is_blue: bool, // true: 蓝方, false: 红方
+    id: int,       // 单位ID (可选，用于显示编号)
+}
+
+export component MapComponent inherits Rectangle {
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+
+    // --- 外部接口 ---
+    // 单位列表数据源
+    in property <[MapUnit]> units: [
+        // 示例数据
+        {x: 0.2, y: 0.5, is_blue: false, id: 1},
+        {x: 0.8, y: 0.5, is_blue: true, id: 1},
+        {x: 0.5, y: 0.5, is_blue: false, id: 2}
+    ];
+
+    // 点击回调：返回归一化坐标 (0.0-1.0)
+    callback map_clicked(float, float);
+
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    clip: true; 
+
+
+    // 1. 地图背景图片
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        
+        Image {
+            width: 100%;
+            height: 100%;
+            source: @image-url("../../images/map.png");
+            image-fit: contain; 
+        }
+    }
+    // Rectangle { background: blue; width: 100%; height: 100%; }
+
+    // 2. 单位渲染层
+    // 注意：这里假设 units 的坐标是归一化的 (0.0~1.0)
+    for unit[i] in root.units : Rectangle {
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        
+        // 计算绝对位置
+        x: unit.x * parent.width - self.width / 2;
+        y: unit.y * parent.height - self.height / 2;
+        
+        background: unit.is_blue ? #0088ff : #ff3333;
+        border-width: 1px;
+        border-color: white;
+        
+        // 可选：显示编号
+        Text {
+            text: unit.id;
+            font-size: 8px;
+            color: white;
+            x: parent.width/2 - self.width/2;
+            y: parent.height/2 - self.height/2;
+        }
+    }
+
+    // 3. 交互层 (覆盖在最上层)
+    // TouchArea {
+    //     width: 100%;
+    //     height: 100%;
+        
+    //     clicked => {
+    //         // 计算归一化坐标
+    //         let rel_x = self.mouse-x / root.width;
+    //         let rel_y = self.mouse-y / root.height;
+            
+    //         // 触发回调
+    //         root.map_clicked(rel_x, rel_y);
+            
+    //         // 调试日志 (可选)
+    //         debug("Map clicked at: " + rel_x + ", " + rel_y);
+    //     }
+    // }
+
+
+}

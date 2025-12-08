@@ -322,6 +322,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::ROBOT_MODULE_STATUS).name == topic){
         RobotModuleStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetRobotModuleStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("RobotModuleStatus JSON: {}", json);

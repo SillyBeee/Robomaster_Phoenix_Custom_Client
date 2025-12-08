@@ -273,11 +273,27 @@ void ComponentManager::SetRobotDynamicStatus(RobotDynamicStatus input){
     status.out_of_combat_countdown = input.out_of_combat_countdown();
     status.can_remote_ammo = input.can_remote_ammo();
     status.can_remote_heal = input.can_remote_heal();
-
-    
-    
-
     slint::invoke_from_event_loop([this, status]() {
             factory_ptr_->set_robot_dynamic_status(status);
     });
+}
+
+void ComponentManager::SetRobotModuleStatus(RobotModuleStatus input) {
+    RobotModuleStatus_slint status;
+    status.power_manager = input.power_manager();
+    status.rfid = input.rfid();
+    status.light_strip = input.light_strip();
+    status.small_shooter = input.small_shooter();
+    status.big_shooter = input.big_shooter();
+    status.uwb = input.uwb();
+    status.armor = input.armor();
+    status.video_transmission = input.video_transmission();
+    status.capacitor = input.capacitor();
+    status.main_controller = input.main_controller();
+    slint::invoke_from_event_loop([this, status]() {
+            factory_ptr_->set_robot_module_status(status);
+    });
+
+
+
 }

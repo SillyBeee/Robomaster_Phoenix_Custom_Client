@@ -1,6 +1,6 @@
 import { ComponentProps } from "../base_component.slint";
 import {
-    Callback_Factory, Callback-Factory, Callback-Factory,
+    Callback_Factory
 } from "../../callback_factory.slint";
 
 // 准心组件
@@ -44,7 +44,7 @@ export component Sight inherits Rectangle {
         x: root.center_x * 1px - self.width / 2;
         y: root.center_y * 1px - self.height / 2;
         border-radius: self.width / 2; // 变成圆形
-        border-width: 6px;             // 粗边框
+        border-width: 8px;             // 粗边框
         border-color: #808080;
         background: transparent;
         opacity: 0.6;                  // 较低透明度
@@ -64,8 +64,8 @@ export component Sight inherits Rectangle {
         viewbox-x: 0; viewbox-y: 0;
         viewbox-width: 100; viewbox-height: 100;
 
-        stroke: #ffaa00; // 亮橙色/黄色表示热量
-        stroke-width: 6px; // 与背景圆环边框一致
+        stroke: #dedddb; // 亮橙色/黄色表示热量
+        stroke-width: 8px; // 与背景圆环边框一致
         
         // 计算热量百分比 (0.0 - 1.0)
         property <float> heat_ratio: root.max_heat > 0 ? Math.min(1.0, root.current_heat / root.max_heat) : 0;

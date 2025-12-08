@@ -28,6 +28,7 @@ public:
     void SetRobotRespawnStatus(RobotRespawnStatus input);
     void SetRobotStaticStatus(RobotStaticStatus input);
     void SetRobotDynamicStatus(RobotDynamicStatus input);
+    void SetRobotModuleStatus(RobotModuleStatus input);
 
 private:
     ComponentManager() = default;

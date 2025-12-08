@@ -1,0 +1,82 @@
+import { ComponentProps } from "../base_component.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
+
+// 单个状态项组件
+component StatusItem inherits HorizontalLayout {
+    in property <string> label;
+    in property <bool> is_online;
+    
+    spacing: 5px;
+    alignment: center;
+
+    // 菱形指示灯
+    Rectangle {
+        width: 8px;
+        height: 14px;
+        y: (parent.height - self.height) / 2; // 垂直居中
+        
+        // 使用 Path 绘制菱形
+        Path {
+            width: 100%; height: 100%;
+            fill: root.is_online ? #00ff00 : #ff0000; // 绿色在线，红色离线
+            viewbox-x: 0;
+            viewbox-y: 0;
+            viewbox-width: parent.width / 1px;
+            viewbox-height: parent.height / 1px;
+            
+            MoveTo { x: parent.width/1px * 0.4; y: 0; }       // 上偏左
+            LineTo { x: parent.width/1px; y: 0; }             // 上右
+            LineTo { x: parent.width/1px * 0.6; y: parent.height/1px; } // 下偏右
+            LineTo { x: 0; y: parent.height/1px; }            // 下左
+            Close {}
+        }
+    }
+
+    Text {
+        text: root.label;
+        color: white;
+        font-size: 14px;
+        vertical-alignment: center;
+    }
+}
+
+export component ModuleStatus inherits Rectangle {
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+
+    background: transparent;
+
+    // 布局容器
+    VerticalLayout {
+        spacing: 5px;
+        alignment: center;
+
+        // 第一行
+        HorizontalLayout {
+            spacing: 15px;
+            alignment: center;
+            StatusItem { label: "机器人"; is_online: Callback-Factory.robot_static_status.connection-state==1 ? true : false; } 
+            StatusItem { label: "图传"; is_online: Callback-Factory.robot_module_status.video_transmission==1 ? true : false; }
+            StatusItem { label: "RFID";is_online: Callback-Factory.robot_module_status.rfid==1 ? true : false; }
+            StatusItem { label: "电源管理"; is_online: Callback-Factory.robot_module_status.power_manager==1 ? true : false; }
+            StatusItem { label: "灯条"; is_online: Callback-Factory.robot_module_status.light-strip==1 ? true : false; }
+            StatusItem { label: "装甲板"; is_online: Callback-Factory.robot_module_status.armor==1 ? true : false;}
+        }
+
+        // 第二行
+        HorizontalLayout {
+            spacing: 15px;
+            alignment: center;
+            StatusItem { label: "UWB"; is_online: Callback-Factory.robot_module_status.uwb==1 ? true : false; }
+            StatusItem { label: "主控"; is_online: Callback-Factory.robot_module_status.main-controller==1 ? true : false; }
+            StatusItem { label: "电容"; is_online: Callback-Factory.robot_module_status.capacitor==1 ? true : false; }
+            StatusItem { label: "17mm枪管"; is_online: Callback-Factory.robot_module_status.small_shooter==1 ? true : false; }
+            StatusItem { label: "42mm枪管"; is_online: Callback-Factory.robot_module_status.big_shooter==1 ? true : false;}
+        }
+    }
+
+    // 选中状态指示
+    if (root.is_selected) : Rectangle {
+        border-width: 1px; border-color: white; opacity: 0.3; background: transparent;
+    }
+}

@@ -1,0 +1,337 @@
+import { ComponentProps } from "../base_component.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
+
+// ==========================================
+// 1. 通用斜切血条 (用于前哨站、哨兵)
+// ==========================================
+component UnitBar inherits Rectangle {
+    in property <string> label;
+    in property <float> hp;
+    in property <float> max_hp;
+    in property <bool> is_blue; // true: 蓝色(右侧布局), false: 红色(左侧布局)
+
+    width: 100px;
+    height: 30px;
+    background: transparent;
+
+    property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
+    property <color> bar_color: is_blue ? #0088ff : #ff3333;
+
+    // 背景框 (灰色)
+    Path {
+        width: 100%; height: 100%;
+        fill: #333333cc;
+        stroke: #666; stroke-width: 1px;
+        viewbox-x: 0; viewbox-y: 0; viewbox-width: 100; viewbox-height: 30;
+
+        MoveTo { x: is_blue ? 10 : 0; y: 0; }
+        LineTo { x: is_blue ? 100 : 90; y: 0; }
+        LineTo { x: is_blue ? 90 : 100; y: 30; }
+        LineTo { x: is_blue ? 0 : 10; y: 30; }
+        Close {}
+    }
+
+    // [修复 1] 移除了之前空的 Path 组件，它会导致渲染器报错
+
+    // [修复 2] 进度条：移除了 clip: true，并增加了宽度非负检查
+    Rectangle {
+        x: is_blue ? 10px : 0px; // 稍微调整位置
+        y: 2px;
+        // 使用 Math.max 确保宽度不为负数
+        width: Math.max(0, (parent.width - 10px) * root.hp_percent);
+        height: parent.height - 4px;
+        background: root.bar_color;
+        opacity: 0.5;
+        // clip: true; // <--- 已移除，防止 Qt 报错
+    }
+
+    Text {
+        text: root.label;
+        color: white;
+        font-size: 12px;
+        x: parent.width / 2 - self.width / 2;
+        y: parent.height / 2 - self.height / 2;
+    }
+    
+    // 血量数值
+    Text {
+        text: Math.round(root.hp);
+        color: white;
+        font-size: 10px;
+        y: parent.height - 12px;
+        x: is_blue ? 10px : parent.width - self.width - 10px;
+    }
+}
+
+// ==========================================
+// 2. 基地长血条 (带Logo圈)
+// ==========================================
+component BaseBar inherits Rectangle {
+    in property <float> hp;
+    in property <float> max_hp;
+    in property <bool> is_blue;
+
+    width: 300px;
+    height: 40px;
+    background: transparent;
+
+    property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
+    property <color> theme_color: is_blue ? #0088ff : #ff3333;
+
+    // 队伍 Logo 圈
+    Rectangle {
+        z: 10; // 放在最上层
+        width: 40px; height: 40px;
+        border-radius: 20px;
+        background: root.theme_color;
+        x: is_blue ? 0 : parent.width - self.width;
+        y: 0;
+        
+        Text {
+            text: is_blue ? "B" : "R";
+            font-size: 20px; font-weight: 900; color: white;
+            x: parent.width/2 - self.width/2; y: parent.height/2 - self.height/2;
+        }
+    }
+
+    // 长条背景
+    Path {
+        width: 100%; height: 100%;
+        fill: #00000080; // 黑色半透明
+        stroke: root.theme_color; stroke-width: 2px;
+        
+        viewbox-x: 0; viewbox-y: 0; viewbox-width: 300; viewbox-height: 40;
+
+        // 红色在左，蓝色在右。形状不同。
+        // 红色：左边平，右边接圆
+        // 蓝色：左边接圆，右边平
+        MoveTo { x: is_blue ? 20 : 0; y: 10; } 
+        LineTo { x: is_blue ? 300 : 280; y: 10; }
+        LineTo { x: is_blue ? 280 : 300; y: 35; }
+        LineTo { x: is_blue ? 0 : 20; y: 35; }
+        Close {}
+    }
+
+    // 血量填充
+    Rectangle {
+        x: is_blue ? 20px : 0px;
+        y: 12px;
+        height: 20px;
+        width: (parent.width - 40px) * root.hp_percent;
+        background: root.theme_color;
+        opacity: 0.6;
+        // 注意：这里需要根据左右对齐，Slint 默认左对齐。
+        // 如果是红色方(右侧Logo)，血条应该从右向左减？通常UI是从Logo处向外延伸。
+        // 这里简化为从左向右。
+    }
+
+    Text {
+        text: Math.round(root.hp);
+        font-size: 16px; font-weight: 700; color: white;
+        x: parent.width / 2 - self.width / 2;
+        y: 12px;
+    }
+}
+
+// ==========================================
+// 3. 机器人卡片 (下方)
+// ==========================================
+component RobotCard inherits Rectangle {
+    in property <int> id;
+    in property <float> hp;
+    in property <float> max_hp;
+    in property <bool> is_blue;
+    in property <image> avatar; // 头像接口
+
+    width: 60px;
+    height: 50px;
+    
+    property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
+    property <color> theme_color: is_blue ? #0088ff : #ff3333;
+
+    // 卡片背景 (平行四边形)
+    Path {
+        width: 100%; height: 100%;
+        fill: #222222cc;
+        stroke: #555; stroke-width: 1px;
+        viewbox-x: 0; viewbox-y: 0; viewbox-width: 60; viewbox-height: 50;
+
+        MoveTo { x: 10; y: 0; }
+        LineTo { x: 60; y: 0; }
+        LineTo { x: 50; y: 50; }
+        LineTo { x: 0; y: 50; }
+        Close {}
+    }
+
+    // 头像区域 (预留)
+    Rectangle {
+        width: 30px; height: 30px;
+        x: 15px; y: 5px;
+        background: #000;
+        clip: true;
+        Image {
+            source: root.avatar;
+            width: 100%; height: 100%;
+        }
+    }
+
+    // 编号
+    Text {
+        text: root.id;
+        color: white; font-weight: 700; font-size: 14px;
+        x: is_blue ? 40px : 5px; 
+        y: 20px;
+    }
+
+    // 底部血条
+    Rectangle {
+        y: 42px; x: 5px;
+        width: 50px; height: 4px;
+        background: #444;
+        Rectangle {
+            x: 0; y: 0;
+            width: parent.width * root.hp_percent;
+            height: 100%;
+            background: root.theme_color;
+        }
+    }
+}
+
+// ==========================================
+// 4. 顶部比分板
+// ==========================================
+component ScoreBoard inherits Rectangle {
+    width: 200px; height: 50px;
+    
+    // 背景
+    Path {
+        width: 100%; height: 100%;
+        fill: #00000080;
+        stroke: #444; stroke-width: 1px;
+        viewbox-x: 0; viewbox-y: 0; viewbox-width: 200; viewbox-height: 50;
+        // 梯形
+        MoveTo { x: 0; y: 0; }
+        LineTo { x: 200; y: 0; }
+        LineTo { x: 180; y: 50; }
+        LineTo { x: 20; y: 50; }
+        Close {}
+    }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 10px;
+        
+        // 红分
+        Text { 
+            text: Callback_Factory.game_status.red-score; 
+            color: #ff3333; font-size: 24px; font-weight: 700; 
+        }
+        
+        // 时间
+        VerticalLayout {
+            alignment: center;
+            Text { 
+                text: "Round " + Callback_Factory.game_status.current-round; 
+                color: #aaa; font-size: 10px; horizontal-alignment: center;
+            }
+            Text { 
+                // 格式化时间 mm:ss
+                property <int> min: Math.floor(Callback_Factory.game_status.stage-countdown-sec / 60);
+                property <int> sec: Callback_Factory.game_status.stage-countdown-sec - (min * 60);
+                text: (min < 10 ? "0"+min : min) + ":" + (sec < 10 ? "0"+sec : sec);
+                color: white; font-size: 20px; font-weight: 700; horizontal-alignment: center;
+            }
+        }
+
+        // 蓝分
+        Text { 
+            text: Callback_Factory.game_status.blue-score; 
+            color: #0088ff; font-size: 24px; font-weight: 700; 
+        }
+    }
+}
+
+// ==========================================
+// 主组件: GameStatus
+// ==========================================
+export component GameStatus inherits Rectangle {
+    in property <ComponentProps> props;
+    in property <bool> is_selected;
+
+    width: 100%; height: 100%; // 通常这个组件是横跨屏幕顶部的
+    background: transparent;
+
+    VerticalLayout {
+        spacing: 5px;
+        
+        // --- 第一行：建筑血量 & 比分 ---
+        HorizontalLayout {
+            alignment: center;
+            spacing: -10px; // 紧凑布局
+
+            // 1. 红色方建筑
+            UnitBar { label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: false; }
+            UnitBar { label: "哨兵"; hp: 600; max-hp: 600; is_blue: false; } // 暂无哨兵数据接口，写死示例
+            BaseBar { hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: false; }
+
+            // 2. 中间比分
+            ScoreBoard {}
+
+            // 3. 蓝色方建筑
+            BaseBar { hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: true; } // 需区分红蓝数据，这里暂用同一接口演示
+            UnitBar { label: "哨兵"; hp: 600; max-hp: 600; is_blue: true; }
+            UnitBar { label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: true; }
+        }
+
+        // --- 第二行：机器人 & 经济 ---
+        HorizontalLayout {
+            alignment: center;
+            spacing: 20px;
+
+            // 1. 红色方机器人 (6 -> 1)
+            HorizontalLayout {
+                spacing: 2px;
+                for i in 6 : RobotCard {
+                    id: i + 1;
+                    is_blue: false;
+                    // 安全访问：检查数组长度
+                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? 
+                        Callback_Factory.global_unit_status.robot-hp[i] : 0;
+                    max_hp: 100;
+                }
+            }
+
+            // 2. 经济面板
+            Rectangle {
+                width: 120px; height: 30px;
+                background: #00000080;
+                border-radius: 15px;
+                
+                HorizontalLayout {
+                    alignment: center; spacing: 10px;
+                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #ff3333; font-weight: 700; }
+                    Rectangle { width: 20px; height: 20px; background: #ffd700; border-radius: 10px; } // 金币图标占位
+                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #0088ff; font-weight: 700; }
+                }
+            }
+
+            // 3. 蓝色方机器人 (1 -> 6)
+            HorizontalLayout {
+                spacing: 2px;
+                for i in 6 : RobotCard {
+                    id: i + 1;
+                    is_blue: true;
+                    // 安全访问：检查数组长度
+                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? 
+                        Callback_Factory.global_unit_status.robot-hp[i] : 0;
+                    max_hp: 100;
+                }
+            }
+        }
+    }
+    
+    // 选中框
+    // if (root.is_selected) : Rectangle {
+    //     border-width: 1px; border-color: yellow; background: transparent;
+    // }
+}

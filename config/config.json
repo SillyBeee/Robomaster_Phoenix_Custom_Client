@@ -1,36 +1,6 @@
 {
     "components": [
         {
-            "color": "#FF5733",
-            "layer": 0,
-            "opacity": 0.8999999761581421,
-            "rel_height": 0.15000000596046448,
-            "rel_width": 0.20000000298023224,
-            "rel_x": 0.05847856029868126,
-            "rel_y": 0.07941745966672897,
-            "type": "base"
-        },
-        {
-            "color": "transparent",
-            "layer": 1,
-            "opacity": 1.0,
-            "rel_height": 0.07112500071525574,
-            "rel_width": 0.25562500953674316,
-            "rel_x": 0.0,
-            "rel_y": 0.8738980889320374,
-            "type": "health_bar"
-        },
-        {
-            "color": "transparent",
-            "layer": 2,
-            "opacity": 0.699999988079071,
-            "rel_height": 0.22474998235702515,
-            "rel_width": 0.20387500524520874,
-            "rel_x": 0.7961249947547913,
-            "rel_y": 0.7752500176429749,
-            "type": "coordinate"
-        },
-        {
             "color": "transparent",
             "layer": 3,
             "opacity": 0.800000011920929,
@@ -39,6 +9,56 @@
             "rel_x": 0.0,
             "rel_y": 0.0,
             "type": "sight"
+        },
+        {
+            "color": "transparent",
+            "layer": 0,
+            "opacity": 0.8999999761581421,
+            "rel_height": 0.08012502640485764,
+            "rel_width": 0.2616249918937683,
+            "rel_x": 0.010355988517403603,
+            "rel_y": 0.8982253670692444,
+            "type": "module_status"
+        },
+        {
+            "color": "transparent",
+            "layer": 1,
+            "opacity": 1.0,
+            "rel_height": 0.088375024497509,
+            "rel_width": 0.17912498116493225,
+            "rel_x": 0.016462991014122963,
+            "rel_y": 0.8102406859397888,
+            "type": "health_bar"
+        },
+        {
+            "color": "transparent",
+            "layer": 2,
+            "opacity": 0.699999988079071,
+            "rel_height": 0.22062498331069946,
+            "rel_width": 0.20387500524520874,
+            "rel_x": 0.7961249947547913,
+            "rel_y": 0.5071173310279846,
+            "type": "coordinate"
+        },
+        {
+            "color": "transparent",
+            "layer": 3,
+            "opacity": 0.800000011920929,
+            "rel_height": 0.1172499880194664,
+            "rel_width": 0.8143749833106995,
+            "rel_x": 0.10827583819627762,
+            "rel_y": 0.0,
+            "type": "game_status"
+        },
+        {
+            "color": "transparent",
+            "layer": 3,
+            "opacity": 0.800000011920929,
+            "rel_height": 0.25337496399879456,
+            "rel_width": 0.30287501215934753,
+            "rel_x": 0.6920593976974487,
+            "rel_y": 0.7369799613952637,
+            "type": "map"
         }
     ]
 }
