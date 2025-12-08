@@ -52,20 +52,27 @@ export component HealthBar inherits Rectangle {
 
         // 红色前景 (实际血量)
         Path {
-            width: parent.width * root.hp_percent; // 宽度随血量变化
+            width: 100%; 
             height: 100%;
-            fill: #ff3333; // 亮红色
+            fill: #ff3333;
+            viewbox-x: 0;
+            viewbox-y: 0;
+            viewbox-width: parent.width / 1px;
+            viewbox-height: parent.height / 1px;
             
-            // 同样的平行四边形逻辑，但宽度动态变化
+            // 计算当前进度的像素宽度
+            property <float> progress_w: (parent.width / 1px) * root.hp_percent;
+
             MoveTo { x: 0; y: 0; }
-            LineTo { x: parent.width/1px - 20; y: 0; }
-            LineTo { x: parent.width/1px; y: parent.height/1px; }
+            // 右上角
+            LineTo { x: progress_w - 20; y: 0; }
+            // 右下角
+            LineTo { x: progress_w; y: parent.height/1px; }
+            // 左下角 (固定)
             LineTo { x: 20; y: parent.height/1px; }
+            // 左上角 (固定)
             LineTo { x: 0; y: 0; }
             Close {}
-            
-            // 动画过渡
-            animate width { duration: 200ms; easing: ease-out; }
         }
 
         // 血量文字

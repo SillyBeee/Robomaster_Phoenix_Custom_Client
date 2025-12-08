@@ -15,7 +15,8 @@
 int main()
 {
     auto main_window = MainWindow::create();
-    auto& callback_factory = main_window->global<Callback_Factory>();
+    auto&& callback_factory = main_window->global<Callback_Factory>();
+    ComponentManager::GetInstance().Init(callback_factory);
     //加载参数
     std::filesystem::path source_path(PROJECT_SOURCE_DIR);
     std::filesystem::path config_path = source_path / "config" / "client_setting.json";
@@ -35,12 +36,12 @@ int main()
                                        { callback_set_fullscreen(main_window, is_fullscreen); });
 
     callback_factory.on_save_to_json([&callback_factory , &components_path](){
-        SaveComponents(callback_factory,components_path.string());
+        COMPONENT_MANAGER.SaveComponents(components_path.string());
     });
 
-    
-    LoadSettings(callback_factory, config_path.string());
-    LoadComponents(callback_factory, components_path.string());
+
+    COMPONENT_MANAGER.LoadSettings(config_path.string());
+    COMPONENT_MANAGER.LoadComponents(components_path.string());
     // pose_test_slider(callback_factory);
 
     drivers::GamePad gamepad;

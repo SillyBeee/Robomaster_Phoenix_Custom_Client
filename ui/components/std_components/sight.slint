@@ -13,6 +13,8 @@ export component Sight inherits Rectangle {
     // ============================================
     in property <int>  shoot_speed: Callback-Factory.robot_dynamic_status.last-projectile-fire-rate; // 射速
     in property <int>  bullets_capacity:Callback-Factory.robot_dynamic_status.remaining-ammo ;   // 发弹量
+    in property <int>  current_heat: Callback-Factory.robot_dynamic_status.current-heat; // 当前热量
+    in property <int>  max_heat: Callback-Factory.robot_static_status.max-heat; // 最大热量
 
 
 
@@ -47,6 +49,56 @@ export component Sight inherits Rectangle {
         background: transparent;
         opacity: 0.6;                  // 较低透明度
     }
+
+    // ============================================
+    //  热量指示圆弧 (前景)
+    // ============================================
+    Path {
+        // 尺寸与背景圆环一致
+        width: sight_size * 5px;
+        height: sight_size * 5px;
+        x: root.center_x * 1px - self.width / 2;
+        y: root.center_y * 1px - self.height / 2;
+        
+        // 强制坐标系，方便计算
+        viewbox-x: 0; viewbox-y: 0;
+        viewbox-width: 100; viewbox-height: 100;
+
+        stroke: #ffaa00; // 亮橙色/黄色表示热量
+        stroke-width: 6px; // 与背景圆环边框一致
+        
+        // 计算热量百分比 (0.0 - 1.0)
+        property <float> heat_ratio: root.max_heat > 0 ? Math.min(1.0, root.current_heat / root.max_heat) : 0;
+        
+        // 计算结束角度 (从顶部 -90度 开始顺时针)
+        // 0度是3点钟方向 -90度是12点钟方向
+        // 完整圆是 360度 (2*PI)
+        property <float> start_angle: -90;
+        property <float> end_angle: -90 + (heat_ratio * 360);
+        
+        // 半径 (viewbox 是 100x100，半径是 50)
+        property <float> r: 50;
+        property <float> cx: 50;
+        property <float> cy: 50;
+
+        // 起点坐标
+        MoveTo {
+            x: cx + r * Math.cos(start_angle * 1deg);
+            y: cy + r * Math.sin(start_angle * 1deg);
+        }
+
+        // 绘制圆弧
+        ArcTo {
+            radius-x: r;
+            radius-y: r;
+            x: cx + r * Math.cos(end_angle * 1deg);
+            y: cy + r * Math.sin(end_angle * 1deg);
+            sweep: true; // 顺时针
+            large-arc: heat_ratio > 0.5; // 如果超过半圆，需要设置此标志
+        }
+    }
+
+
 
     // ============================================
     //  基础十字准心 (保留)

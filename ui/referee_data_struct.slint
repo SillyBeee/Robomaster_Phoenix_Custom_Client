@@ -21,7 +21,7 @@ export struct Pose_slint{
 // ============================================
 export struct GameStatus_slint{
     current_round: int,  //当前局数
-    total_round: int, //总局数
+    total_rounds: int, //总局数
     red_score: int, //红方分数
     blue_score: int, //蓝方分数
     current_stage: int, //当前阶段
@@ -70,7 +70,7 @@ export struct RobotStaticStatus_slint{
     level: int, //当前等级
     max_health: int, //最大血量
     max_heat: int, //最大热量
-    heat_cooldown_rate: float, //热量冷却速率 (每秒)
+    heat_cooldown_rate: float, //热量冷却速率 (每秒)(神秘的拼写错误，别问，问就是dji这么写的)
     max_power: int, //最大功率
     max_buffer_energy: int, //最大缓冲能量
     max_chassis_energy: int, //最大底盘能量

@@ -1,37 +1,47 @@
 #ifndef COMPONENT_MANAGER_HPP
 #define COMPONENT_MANAGER_HPP
-#include "slint_string.h"
+
+
+#include "protocol.pb.h"
 #include <app-window.h>
 #include <slint_color.h>
+#include <string>
 
 
-void LoadSettings(const Callback_Factory& factory,const std::string& config_path="");
-void LoadComponents(const Callback_Factory& factory,std::string config_path="");
-void SaveComponents(const Callback_Factory& factory,const  std::string& config_path="");
+class ComponentManager {
+public:
+    static ComponentManager& GetInstance();
+
+    ComponentManager(const ComponentManager&) = delete;
+    ComponentManager& operator=(const ComponentManager&) = delete;
+
+    // 初始化函数，传入 factory
+    void Init(const Callback_Factory& factory);
+
+    void LoadSettings(const std::string& config_path = "");
+    void LoadComponents(std::string config_path = "");
+    void SaveComponents(const std::string& config_path = "");
+
+    void SetGameStatus(GameStatus input);
+    void SetGlobalUnitStatus(GlobalUnitStatus input);
+    void SetGlobalLogisticsStatus(GlobalLogisticsStatus input);
+    void SetRobotRespawnStatus(RobotRespawnStatus input);
+    void SetRobotStaticStatus(RobotStaticStatus input);
+    void SetRobotDynamicStatus(RobotDynamicStatus input);
+
+private:
+    ComponentManager() = default;
+    ~ComponentManager() = default;
 
 
+    static slint::Color HexToColor(const std::string &hex);
+
+private:
+
+    const Callback_Factory* factory_ptr_ = nullptr;
+};
 
 
-// 十六进制颜色字符串转换为 slint::Color工具函数
-static inline slint::Color HexToColor(const std::string &hex) {
+#define COMPONENT_MANAGER ComponentManager::GetInstance()
 
-    if (hex == "transparent") {
-        return slint::Color::from_argb_uint8(0, 0, 0, 0);
-    }
-    
-    std::string s = hex;
-    if (s.rfind("#", 0) == 0) {
-        s = s.substr(1);
-    }
-    if (s.length() == 6) {
-        int r = std::stoi(s.substr(0, 2), nullptr, 16);
-        int g = std::stoi(s.substr(2, 2), nullptr, 16);
-        int b = std::stoi(s.substr(4, 2), nullptr, 16);
-        return slint::Color::from_rgb_uint8(r, g, b);
-    }
-    return slint::Color::from_rgb_uint8(255, 255, 255); // 默认白色
-}
-
-
-
-#endif
+#endif // COMPONENT_MANAGER_HPP

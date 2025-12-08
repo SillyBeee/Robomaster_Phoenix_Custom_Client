@@ -1,4 +1,14 @@
-import { Pose_slint,GameStatus_slint,GlobalUnitStatus_slint,RobotDynamicStatus_slint,RobotStaticStatus_slint } from "referee_data_struct.slint";
+import {
+    Pose_slint,
+    GameStatus_slint,
+    GlobalUnitStatus_slint,
+    RobotDynamicStatus_slint,
+    RobotStaticStatus_slint,
+    GlobalLogisticsStatus_slint,
+    RobotRespawnStatus_slint,
+} from "referee_data_struct.slint";
+
+
 export struct ComponentData {
     type: string,
     color: brush,
@@ -17,7 +27,7 @@ export struct ComponentData {
 
 
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
-export global Callback_Factory{
+export global Callback_Factory {
     // 全局变量
     in-out property <int> current-resolution-index: 0; // 当前分辨率索引
     in-out property <int> current-index: 0;  //当前页索引
@@ -30,20 +40,17 @@ export global Callback_Factory{
     in-out property <[ComponentData]> components: [];
 
     //后端裁判系统与机器人数据
-    in-out property <Pose_slint> current_pose: {roll:0.0, pitch:0.0, yaw:0.0};
+    in-out property <Pose_slint> current_pose: { roll:0.0, pitch:0.0, yaw:0.0 };
     in-out property <GameStatus_slint> game_status;
     in-out property <GlobalUnitStatus_slint> global_unit_status;
+    in-out property <GlobalLogisticsStatus-slint> global_logistics_status;
+    in-out property <RobotRespawnStatus-slint> robot_respawn_status;
     in-out property <RobotStaticStatus-slint> robot_static_status;
     in-out property <RobotDynamicStatus-slint> robot_dynamic_status;
-
-    
-
 
     //全局回调
     callback open-url(string);
     callback set_resolution(string);
     callback set_fullscreen(bool);
     callback save_to_json();
-    
-
 }

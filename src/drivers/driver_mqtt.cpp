@@ -1,6 +1,7 @@
 #include <drivers/driver_mqtt.hpp>
 #include "protocol/protocol.pb.h"
 #include <google/protobuf/util/json_util.h> 
+#include "component_manager.hpp"
 namespace drivers
 {
 using InputTopic = MqttClient::InputTopic;
@@ -216,6 +217,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     if(topic == GetInputTopic(InputTopic::GAME_STATUS).name){
         GameStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetGameStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("GameStatus JSON: {}", json);
@@ -227,6 +229,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::GLOBAL_UNIT_STATUS).name == topic){
         GlobalUnitStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetGlobalUnitStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("GlobalUnitStatus JSON: {}", json);
@@ -239,6 +242,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::GLOBAL_LOGISTICS_STATUS).name == topic){
         GlobalLogisticsStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetGlobalLogisticsStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("GlobalLogisticsStatus JSON: {}", json);
@@ -283,6 +287,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::ROBOT_RESPAWN_STATUS).name == topic){
         RobotRespawnStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetRobotRespawnStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("RobotRespawnStatus JSON: {}", json);
@@ -294,6 +299,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::ROBOT_STATIC_STATUS).name == topic){
         RobotStaticStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetRobotStaticStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("RobotStaticStatus JSON: {}", json);
@@ -304,6 +310,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::ROBOT_DYNAMIC_STATUS).name == topic){
         RobotDynamicStatus status;
         if (status.ParseFromString(payload)) {
+            COMPONENT_MANAGER.SetRobotDynamicStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
             LOG_INFO("RobotDynamicStatus JSON: {}", json);
