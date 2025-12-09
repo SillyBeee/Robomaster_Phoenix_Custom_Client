@@ -1,0 +1,51 @@
+import {Callback_Factory} from "../../callback_factory.slint";
+
+// 建议改回 Rectangle 以便更好地控制全屏遮罩，PopupWindow 也可以但定位较麻烦
+export component Performance_Select_Window inherits Rectangle {
+    width: 100%;
+    height: 100%;
+    // 1. 全屏背景变暗 (模拟遮罩)
+    background: #00000060; 
+
+    // 阻止点击穿透
+    TouchArea {}
+
+    // 2. 磨砂玻璃窗口
+    Rectangle {
+        width: 80%;
+        height: 80%;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+
+        border-radius: 16px;
+
+        // --- 关键：拟态玻璃效果 ---
+        
+        // A. 背景使用半透明渐变，模拟光照
+        background: @linear-gradient(135deg, #3a3f55cc 0%, #1d1f2acc 100%);
+        
+        // B. 边框使用半透明白色，模拟玻璃边缘反光
+        border-width: 1px;
+        border-color: #ffffff30;
+
+        // C. (可选) 内部再加一层微弱的亮光
+        Rectangle {
+            width: 100%; height: 100%;
+            border-radius: parent.border-radius;
+            background: @linear-gradient(180deg, #ffffff10 0%, transparent 40%);
+        }
+
+        // 内容区域
+        VerticalLayout {
+            padding: 20px;
+            alignment: center;
+            Text {
+                text: "Performance Select Window";
+                color: white;
+                font-size: 24px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}

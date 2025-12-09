@@ -4,7 +4,7 @@ project(RM_Client CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) 
-
+set(CMAKE_BUILD_TYPE Release)
 set(SLINT_STYLE "cosmic" CACHE STRING "Slint style" FORCE)
 
 find_package(Slint REQUIRED)

@@ -1,19 +1,50 @@
 import {Callback_Factory} from "../../callback_factory.slint";
 import { Component_Render } from "../../components/component_render.slint";
+import {Performance_Select_Window} from "./performance_select_window.slint";
+
 export component Page_DashBoard inherits Rectangle {
     width: 100%;
     height: 100%;
     background: @linear-gradient(180deg, #5c6175 0%, #080114 100%);
 
+    // 1. 添加控制显示的属性
+    property <bool> show_performance_window: false;
 
-    Image{
-        source: Callback_Factory.video_frame;
-        // source: @image-url("../../images/rmui_new.png");
+    // 2. 使用 FocusScope 包裹内容以捕获键盘事件
+    focus_scope := FocusScope { // 给 FocusScope 一个名字
         width: 100%;
         height: 100%;
-    }
-    
-    Component_Render {
-        draggable: false;
+        
+        // 关键修复：组件初始化时自动请求焦点
+        init => {
+            self.focus();
+        }
+
+        // 处理按键事件
+        key-pressed(event) => {
+            if (event.text == "p" || event.text == "P") {
+                root.show_performance_window = !root.show_performance_window;
+                return accept;
+            }
+            return reject;
+        }
+
+        Image{
+            source: Callback_Factory.video_frame;
+            // source: @image-url("../../images/rmui_new.png");
+            width: 100%;
+            height: 100%;
+        }
+        
+        Component_Render {
+            draggable: false;
+        }
+
+        // 3. 根据属性控制窗口显示
+        if (root.show_performance_window) : Performance_Select_Window {
+            // 确保覆盖在最上层
+            width: 100%;
+            height: 100%;
+        }
     }
 }

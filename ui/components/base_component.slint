@@ -1,5 +1,5 @@
 //基组件
-import {Callback_Factory, Callback-Factory, Callback-Factory} from "../callback_factory.slint";
+import {Callback-Factory, Callback-Factory} from "../callback_factory.slint";
 
 export struct ComponentProps {
     //上下文输入
@@ -35,7 +35,7 @@ export component Base_Component inherits Rectangle {
         opacity_value: 1.0,
         layer: 0,
     };
-    in-out property <bool> is_selected: false;
+    in-out property <bool> is_selected: Callback-Factory.current_component_index == props.container_index;
     
     // 新增：控制是否允许拖动的开关，默认为 true
     in property <bool> draggable: true; 
@@ -93,11 +93,12 @@ export component Base_Component inherits Rectangle {
 
         pointer-event(event) => {
             if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
-                root.is_selected = true;
+                // root.is_selected = true;
                 Callback_Factory.current_component_index = props.container_index;
                 self.pressed_point = { x: self.mouse-x, y: self.mouse-y };
                 root.on_mouse_pressed();
             } else if (event.kind == PointerEventKind.up) {
+                // root.is_selected = false;
                 root.on_mouse_released();
             }
         }
