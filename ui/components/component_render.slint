@@ -7,6 +7,8 @@ import { ModuleStatus } from "std_components/module_status.slint";
 import { GameStatus } from "std_components/game_status.slint";
 import { MapComponent } from "std_components/map.slint";
 export component Component_Render inherits Rectangle {
+    in-out property <bool> draggable: true;
+
     width: 100%;
     height: 100%;
     background: transparent;
@@ -28,10 +30,13 @@ export component Component_Render inherits Rectangle {
         };
         
         is_selected: i == Callback_Factory.current_component_index;
+        draggable: root.draggable;
 
         // 2. 根据类型填充内容 (@children)
 
         if (comp.type == "sight") : Sight {
+            width: 100%;
+            height: 100%;
             props: parent.props;
             is_selected: parent.is_selected;
         }
@@ -47,6 +52,8 @@ export component Component_Render inherits Rectangle {
 
         if (comp.type == "health_bar") : HealthBar {
             // 只需要传数据，不需要管定位
+            width: 100%;
+            height: 100%;
             props: parent.props; // 这里的 parent 是 Base_Component
             is_selected: parent.is_selected;
             // current_hp: ...
@@ -54,6 +61,8 @@ export component Component_Render inherits Rectangle {
 
 
         if (comp.type == "coordinate") : Coordinate-3D {
+            width: 100%;
+            height: 100%;
             props: parent.props;
             is_selected: parent.is_selected;
         }
@@ -63,18 +72,24 @@ export component Component_Render inherits Rectangle {
 
 
         if (comp.type == "module_status") : ModuleStatus {
+            width: 100%;
+            height: 100%;
             props: parent.props;
             is_selected: parent.is_selected;
         }
 
 
         if (comp.type == "game_status"): GameStatus {
+            width: 100%;
+            height: 100%;
             props: parent.props;
             is_selected: parent.is_selected;
         }
 
 
         if (comp.type == "map") : MapComponent {
+            width: 100%;
+            height: 100%;
             props: parent.props;
             is_selected: parent.is_selected;
             

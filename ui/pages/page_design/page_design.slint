@@ -19,11 +19,15 @@ export component Page_Design inherits Rectangle {
             border-width: 1px;
             border-color: #303344;
             Component_Render {}
+            width: 77%;
+            height: 100%;
         }
 
         // 属性面板
         Attribute_Bar {
-            visible: self.has_selection;
+            // visible: self.has_selection;
+            width: 21%;
+            height: 100%;
         }
     }
 }

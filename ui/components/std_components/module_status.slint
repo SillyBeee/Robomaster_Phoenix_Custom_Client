@@ -5,29 +5,27 @@ import { Callback_Factory } from "../../callback_factory.slint";
 component StatusItem inherits HorizontalLayout {
     in property <string> label;
     in property <bool> is_online;
+    in property <length> item_h; // 传入高度基准
     
-    spacing: 5px;
+    spacing: item_h * 0.25; 
     alignment: center;
 
     // 菱形指示灯
     Rectangle {
-        width: 8px;
-        height: 14px;
-        y: (parent.height - self.height) / 2; // 垂直居中
+        // 宽度稍微窄一点，保持菱形比例
+        width: item_h * 0.6;  
+        height: item_h;       
+        y: (parent.height - self.height) / 2; 
         
-        // 使用 Path 绘制菱形
         Path {
             width: 100%; height: 100%;
-            fill: root.is_online ? #00ff00 : #ff0000; // 绿色在线，红色离线
-            viewbox-x: 0;
-            viewbox-y: 0;
-            viewbox-width: parent.width / 1px;
-            viewbox-height: parent.height / 1px;
+            fill: root.is_online ? #00ff00 : #ff0000; 
+            viewbox-x: 0; viewbox-y: 0; viewbox-width: 100; viewbox-height: 100;
             
-            MoveTo { x: parent.width/1px * 0.4; y: 0; }       // 上偏左
-            LineTo { x: parent.width/1px; y: 0; }             // 上右
-            LineTo { x: parent.width/1px * 0.6; y: parent.height/1px; } // 下偏右
-            LineTo { x: 0; y: parent.height/1px; }            // 下左
+            MoveTo { x: 40; y: 0; }       
+            LineTo { x: 100; y: 0; }             
+            LineTo { x: 60; y: 100; } 
+            LineTo { x: 0; y: 100; }            
             Close {}
         }
     }
@@ -35,7 +33,7 @@ component StatusItem inherits HorizontalLayout {
     Text {
         text: root.label;
         color: white;
-        font-size: 14px;
+        font-size: item_h; // 字体大小跟随高度
         vertical-alignment: center;
     }
 }
@@ -45,38 +43,40 @@ export component ModuleStatus inherits Rectangle {
     in property <bool> is_selected;
 
     background: transparent;
+    
+    // 动态计算大小：基于组件高度
+    // 组件有两行，预留一些间距。假设每行占高度的 35% 左右。
+    // 这样当组件被拉大时，字体和图标都会变大。
+    property <length> dynamic_size: root.height * 0.30;
 
     // 布局容器
     VerticalLayout {
-        spacing: 5px;
+        spacing: root.height * 0.1; // 行间距
         alignment: center;
 
         // 第一行
         HorizontalLayout {
-            spacing: 15px;
+            spacing: root.dynamic_size; // 项间距
             alignment: center;
-            StatusItem { label: "机器人"; is_online: Callback-Factory.robot_static_status.connection-state==1 ? true : false; } 
-            StatusItem { label: "图传"; is_online: Callback-Factory.robot_module_status.video_transmission==1 ? true : false; }
-            StatusItem { label: "RFID";is_online: Callback-Factory.robot_module_status.rfid==1 ? true : false; }
-            StatusItem { label: "电源管理"; is_online: Callback-Factory.robot_module_status.power_manager==1 ? true : false; }
-            StatusItem { label: "灯条"; is_online: Callback-Factory.robot_module_status.light-strip==1 ? true : false; }
-            StatusItem { label: "装甲板"; is_online: Callback-Factory.robot_module_status.armor==1 ? true : false;}
+            StatusItem { label: "机器人"; is_online: Callback_Factory.robot_static_status.connection-state==1; item_h: root.dynamic_size; } 
+            StatusItem { label: "图传"; is_online: Callback_Factory.robot_module_status.video_transmission==1; item_h: root.dynamic_size; }
+            StatusItem { label: "RFID";is_online: Callback_Factory.robot_module_status.rfid==1; item_h: root.dynamic_size; }
+            StatusItem { label: "电源管理"; is_online: Callback_Factory.robot_module_status.power_manager==1; item_h: root.dynamic_size; }
+            StatusItem { label: "灯条"; is_online: Callback_Factory.robot_module_status.light-strip==1; item_h: root.dynamic_size; }
+            StatusItem { label: "装甲板"; is_online: Callback_Factory.robot_module_status.armor==1; item_h: root.dynamic_size;}
         }
 
         // 第二行
         HorizontalLayout {
-            spacing: 15px;
+            spacing: root.dynamic_size;
             alignment: center;
-            StatusItem { label: "UWB"; is_online: Callback-Factory.robot_module_status.uwb==1 ? true : false; }
-            StatusItem { label: "主控"; is_online: Callback-Factory.robot_module_status.main-controller==1 ? true : false; }
-            StatusItem { label: "电容"; is_online: Callback-Factory.robot_module_status.capacitor==1 ? true : false; }
-            StatusItem { label: "17mm枪管"; is_online: Callback-Factory.robot_module_status.small_shooter==1 ? true : false; }
-            StatusItem { label: "42mm枪管"; is_online: Callback-Factory.robot_module_status.big_shooter==1 ? true : false;}
+            StatusItem { label: "UWB"; is_online: Callback_Factory.robot_module_status.uwb==1; item_h: root.dynamic_size; }
+            StatusItem { label: "主控"; is_online: Callback_Factory.robot_module_status.main-controller==1; item_h: root.dynamic_size; }
+            StatusItem { label: "电容"; is_online: Callback_Factory.robot_module_status.capacitor==1; item_h: root.dynamic_size; }
+            StatusItem { label: "17mm枪管"; is_online: Callback_Factory.robot_module_status.small_shooter==1; item_h: root.dynamic_size; }
+            StatusItem { label: "42mm枪管"; is_online: Callback_Factory.robot_module_status.big_shooter==1; item_h: root.dynamic_size;}
         }
     }
+    
 
-    // 选中状态指示
-    if (root.is_selected) : Rectangle {
-        border-width: 1px; border-color: white; opacity: 0.3; background: transparent;
-    }
 }

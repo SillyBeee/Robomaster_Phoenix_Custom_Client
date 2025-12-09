@@ -1,85 +1,81 @@
 import { ComponentProps } from "../base_component.slint";
-import { Callback-Factory, Callback-Factory } from "../../callback_factory.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
 
 export component HealthBar inherits Rectangle {
     in property <ComponentProps> props;
     in property <bool> is_selected;
 
     // --- 数据接口 ---
-    in property <image> avatar_image; // 头像图片
-    in property <float> max_hp: Callback-Factory.robot_static_status.max-health;
-    in property <float> current_hp: Callback-Factory.robot_dynamic_status.current-health;
-    in property <float> current_power: Callback-Factory.robot_dynamic_status.current-chassis-energy; // 剩余底盘能量
+    in property <image> avatar_image; 
+    in property <float> max_hp: Callback_Factory.robot_static_status.max-health;
+    in property <float> current_hp: Callback_Factory.robot_dynamic_status.current-health;
+    in property <float> current_power: Callback_Factory.robot_dynamic_status.current-chassis-energy; 
 
-    // --- 尺寸配置 ---
-    in property <length> bar_height: 30px;
-    in property <length> bar_width: 200px;
-    in property <length> avatar_size: 50px;
+    // --- 动态尺寸计算 ---
+    // 1. 头像大小：高度的 80%
+    property <length> avatar_size: root.height * 0.8; 
+    
+    // 2. 血条起始 X 坐标：在头像中心偏右一点，形成层叠感
+    property <length> bar_start_x: root.avatar_size * 0.7;
+    
+    // 3. 血条宽度：总宽度 - 起始位置
+    property <length> bar_width: root.width - root.bar_start_x;
+    
+    // 4. 血条高度：高度的 50%
+    property <length> bar_height: root.height * 0.5;
 
-    width: root.bar_width + root.avatar_size; 
-    height: root.avatar_size + 10px;
+    // 5. 字体大小
+    property <length> base_font_size: (Callback_Factory.font_size * 1px) * (root.height / 50px); 
+
     background: transparent;
 
-    // 计算血量百分比 (0.0 - 1.0)
-    property <float> hp_percent: Math.max(0, Math.min(1, root.current_hp / root.max_hp));
+    property <float> hp_percent: Math.max(0, Math.min(1, root.max_hp > 0 ? root.current_hp / root.max_hp : 0));
 
     // ============================================
-    // 1. 红色血条 (背景 + 前景)
+    // 1. 红色血条 (位于中间层)
     // ============================================
-    // 血条容器 (平行四边形)
     Rectangle {
-        x: root.avatar_size * 0.8; // 稍微插入头像后面
-        y: (root.avatar_size - root.bar_height) / 2;
+        x: root.bar_start_x;
+        y: (root.avatar_size - root.bar_height) / 2 +5px; // 垂直居中于头像
         width: root.bar_width;
         height: root.bar_height;
-        clip: true; // 裁剪超出部分
-
-        // 红色背景 (底色)
+        
+        // 背景框 (平行四边形)
         Path {
             width: 100%; height: 100%;
-            fill: #4a000080; // 深红半透明背景
-            stroke: #ff0000;
-            stroke-width: 1px;
+            fill: #4a000080; 
+            stroke: #ff0000; stroke-width: 1px;
             
-            // 绘制平行四边形
+            // 这样 Slint 在缩放时就不会因为保持纵横比而留白太多
+            viewbox-x: 0; viewbox-y: 0; viewbox-width: 300; viewbox-height: 50;
+            
+            // 重新调整坐标以适应新的 300x50 坐标系
             MoveTo { x: 0; y: 0; }
-            LineTo { x: parent.width/1px - 20; y: 0; } // 上边
-            LineTo { x: parent.width/1px; y: parent.height/1px; } // 右斜边
-            LineTo { x: 20; y: parent.height/1px; } // 下边
-            LineTo { x: 0; y: 0; } // 左斜边 (被头像挡住，无所谓)
+            LineTo { x: 285; y: 0; }  // 上边 (300 - 15)
+            LineTo { x: 300; y: 50; } // 右下角
+            LineTo { x: 15; y: 50; }  // 下边
+            LineTo { x: 0; y: 0; }    // 回到起点
             Close {}
         }
 
-        // 红色前景 (实际血量)
-        Path {
-            width: 100%; 
+        // 血量填充 (使用 Clip 实现进度)
+        Rectangle {
+            x: 0; y: 0;
+            width: parent.width * root.hp_percent; // 宽度跟随血量
             height: 100%;
-            fill: #ff3333;
-            viewbox-x: 0;
-            viewbox-y: 0;
-            viewbox-width: parent.width / 1px;
-            viewbox-height: parent.height / 1px;
-            
-            // 计算当前进度的像素宽度
-            property <float> progress_w: (parent.width / 1px) * root.hp_percent;
+            // clip: true; // 关键：裁剪超出部分
 
-            MoveTo { x: 0; y: 0; }
-            // 右上角
-            LineTo { x: progress_w - 20; y: 0; }
-            // 右下角
-            LineTo { x: progress_w; y: parent.height/1px; }
-            // 左下角 (固定)
-            LineTo { x: 20; y: parent.height/1px; }
-            // 左上角 (固定)
-            LineTo { x: 0; y: 0; }
-            Close {}
+            // 内部再放一个 Path 保持形状，或者直接用矩形模拟
+            // 为了视觉效果最好，这里用矩形模拟填充，虽然没有斜切角，但在进度条中间看不出来
+            background: #ff3333;
+            opacity: 0.8;
         }
 
         // 血量文字
         Text {
             text: Math.round(root.current_hp) + " / " + Math.round(root.max_hp);
             color: white;
-            font-size: 14px;
+            font-size: root.base_font_size * 0.8;
             font-weight: 700;
             x: parent.width / 2 - self.width / 2;
             y: parent.height / 2 - self.height / 2;
@@ -87,81 +83,63 @@ export component HealthBar inherits Rectangle {
     }
 
     // ============================================
-    // 2. 蓝色功率条 (底部)
+    // 2. 蓝色功率条 (位于底部)
     // ============================================
     Rectangle {
-        x: root.avatar_size * 0.9;
+        x: root.bar_start_x + 10px; // 稍微缩进一点
         y: root.avatar_size * 0.85; // 位于血条下方
-        width: root.bar_width * 0.9;
-        height: 6px;
+        width: root.bar_width - 20px;
+        height: root.height * 0.15; 
 
         // 功率条背景
         Rectangle {
             width: 100%; height: 100%;
-            background: #001a3380; // 深蓝背景
-            
-            // 简单的斜切效果可以用 Path，这里简化用 Rectangle
+            background: #001a3380;
         }
 
-        // 功率条前景 (假设最大功率 200，这里做个简单的进度演示)
+        // 功率条前景
         Rectangle {
             width: Math.min(parent.width, parent.width * (root.current_power / 200.0)); 
             height: 100%;
             background: #0088ff;
+            x: 0;
         }
         
-        // 功率文字 (在右侧)
+        // 功率文字 (右对齐)
         Text {
-            x: parent.width + 10px;
-            y: -4px;
+            x: parent.width - self.width; // 靠右
+            y: (parent.height - self.height)/2;
             text: Math.round(root.current_power) + " kW";
             color: white;
-            font-size: 12px;
+            font-size: root.base_font_size * 0.6;
             font-weight: 700;
         }
     }
 
     // ============================================
-    // 3. 头像框 (最上层)
+    // 3. 头像框 (最上层，遮盖血条左侧)
     // ============================================
     Rectangle {
         x: 0;
-        y: 0;
+        y: (root.height - root.avatar_size) / 2; // 垂直居中
         width: root.avatar_size;
         height: root.avatar_size;
-        border-radius: root.avatar_size / 2;
-        background: black; // 默认黑色底
-        border-width: 2px;
-        border-color: #333;
-        clip: true; // 裁剪图片为圆形
+        z: 10; // 保证在最上层
 
-        // 头像图片
-        Image {
-            width: 100%;
-            height: 100%;
-            source: root.avatar_image;
-            image-fit: cover;
-        }
-        
-        // 左侧红色光晕装饰 (模仿图片左边的红边)
         Rectangle {
-            x: -2px;
-            y: 0;
-            width: parent.width;
-            height: parent.height;
-            border-radius: parent.width / 2;
+            width: 100%; height: 100%;
+            border-radius: self.width / 2;
+            background: black; 
             border-width: 2px;
-            border-color: transparent;
-            // 这里很难做复杂的渐变边框，简单模拟左侧红边
+            border-color: #333;
+            clip: true; 
+
+            Image {
+                width: 100%; height: 100%;
+                source: root.avatar_image;
+                image-fit: cover;
+            }
         }
     }
     
-    // 选中状态指示
-    if (root.is_selected) : Rectangle {
-        width: 100%; height: 100%;
-        border-width: 1px;
-        border-color: white;
-        opacity: 0.3;
-        background: transparent;
-    }
 }

@@ -36,6 +36,9 @@ export component Base_Component inherits Rectangle {
         layer: 0,
     };
     in-out property <bool> is_selected: false;
+    
+    // 新增：控制是否允许拖动的开关，默认为 true
+    in property <bool> draggable: true; 
 
     // ==========================================
     // 钩子回调(子组件可以使用回调来实现自定义交互逻辑,回调会被自动触发)
@@ -55,7 +58,7 @@ export component Base_Component inherits Rectangle {
     background: props.background_color;
     // background: transparent; 
     opacity: props.opacity_value;
-    border-width: root.is_selected ? 2px : 1px;
+    border-width: (root.draggable && root.is_selected) ? 2px : (root.draggable ? 1px : 0px);
     border-color: root.is_selected ? #ffd54f : #808080;
 
     // ==========================================
@@ -83,9 +86,9 @@ export component Base_Component inherits Rectangle {
         };
     }
 
-
     TouchArea {
-        mouse-cursor: grab;
+        // 修改：根据 draggable 状态改变鼠标样式
+        mouse-cursor: root.draggable ? grab : default;
         private property <Point> pressed_point;
 
         pointer-event(event) => {
@@ -100,7 +103,8 @@ export component Base_Component inherits Rectangle {
         }
 
         moved => {
-            if (root.is_selected && root.props.container_width > 0 && root.props.container_height > 0) {
+            // 修改：增加 root.draggable 的判断
+            if (root.draggable && root.is_selected && root.props.container_width > 0 && root.props.container_height > 0) {
 
                 // 计算鼠标移动的像素距离 (delta)
                 let dx = self.mouse-x - self.pressed_point.x;

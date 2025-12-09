@@ -8,10 +8,12 @@ component UnitBar inherits Rectangle {
     in property <string> label;
     in property <float> hp;
     in property <float> max_hp;
-    in property <bool> is_blue; // true: 蓝色(右侧布局), false: 红色(左侧布局)
+    in property <bool> is_blue; 
+    in property <length> font_size; // 传入字体大小
 
-    width: 100px;
-    height: 30px;
+    // 移除固定宽高，由父布局决定，或者使用百分比
+    // width: 100px; 
+    // height: 30px;
     background: transparent;
 
     property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
@@ -31,24 +33,20 @@ component UnitBar inherits Rectangle {
         Close {}
     }
 
-    // [修复 1] 移除了之前空的 Path 组件，它会导致渲染器报错
-
-    // [修复 2] 进度条：移除了 clip: true，并增加了宽度非负检查
+    // 进度条
     Rectangle {
-        x: is_blue ? 10px : 0px; // 稍微调整位置
+        x: is_blue ? parent.width * 0.1 : 0px; 
         y: 2px;
-        // 使用 Math.max 确保宽度不为负数
-        width: Math.max(0, (parent.width - 10px) * root.hp_percent);
+        width: Math.max(0, (parent.width * 0.9) * root.hp_percent);
         height: parent.height - 4px;
         background: root.bar_color;
         opacity: 0.5;
-        // clip: true; // <--- 已移除，防止 Qt 报错
     }
 
     Text {
         text: root.label;
         color: white;
-        font-size: 12px;
+        font-size: root.font_size;
         x: parent.width / 2 - self.width / 2;
         y: parent.height / 2 - self.height / 2;
     }
@@ -57,8 +55,8 @@ component UnitBar inherits Rectangle {
     Text {
         text: Math.round(root.hp);
         color: white;
-        font-size: 10px;
-        y: parent.height - 12px;
+        font-size: root.font_size * 0.8;
+        y: parent.height - self.height - 2px;
         x: is_blue ? 10px : parent.width - self.width - 10px;
     }
 }
@@ -70,9 +68,10 @@ component BaseBar inherits Rectangle {
     in property <float> hp;
     in property <float> max_hp;
     in property <bool> is_blue;
+    in property <length> font_size;
 
-    width: 300px;
-    height: 40px;
+    // width: 300px; // 移除固定宽
+    // height: 40px;
     background: transparent;
 
     property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
@@ -80,16 +79,16 @@ component BaseBar inherits Rectangle {
 
     // 队伍 Logo 圈
     Rectangle {
-        z: 10; // 放在最上层
-        width: 40px; height: 40px;
-        border-radius: 20px;
+        z: 10; 
+        width: parent.height; height: parent.height; // 正方形，跟随高度
+        border-radius: self.width / 2;
         background: root.theme_color;
         x: is_blue ? 0 : parent.width - self.width;
         y: 0;
         
         Text {
             text: is_blue ? "B" : "R";
-            font-size: 20px; font-weight: 900; color: white;
+            font-size: root.font_size * 1.2; font-weight: 900; color: white;
             x: parent.width/2 - self.width/2; y: parent.height/2 - self.height/2;
         }
     }
@@ -97,14 +96,10 @@ component BaseBar inherits Rectangle {
     // 长条背景
     Path {
         width: 100%; height: 100%;
-        fill: #00000080; // 黑色半透明
+        fill: #00000080; 
         stroke: root.theme_color; stroke-width: 2px;
         
         viewbox-x: 0; viewbox-y: 0; viewbox-width: 300; viewbox-height: 40;
-
-        // 红色在左，蓝色在右。形状不同。
-        // 红色：左边平，右边接圆
-        // 蓝色：左边接圆，右边平
         MoveTo { x: is_blue ? 20 : 0; y: 10; } 
         LineTo { x: is_blue ? 300 : 280; y: 10; }
         LineTo { x: is_blue ? 280 : 300; y: 35; }
@@ -114,22 +109,19 @@ component BaseBar inherits Rectangle {
 
     // 血量填充
     Rectangle {
-        x: is_blue ? 20px : 0px;
-        y: 12px;
-        height: 20px;
-        width: (parent.width - 40px) * root.hp_percent;
+        x: is_blue ? parent.height * 0.5 : 0px;
+        y: parent.height * 0.3;
+        height: parent.height * 0.5;
+        width: (parent.width - parent.height) * root.hp_percent;
         background: root.theme_color;
         opacity: 0.6;
-        // 注意：这里需要根据左右对齐，Slint 默认左对齐。
-        // 如果是红色方(右侧Logo)，血条应该从右向左减？通常UI是从Logo处向外延伸。
-        // 这里简化为从左向右。
     }
 
     Text {
         text: Math.round(root.hp);
-        font-size: 16px; font-weight: 700; color: white;
+        font-size: root.font_size; font-weight: 700; color: white;
         x: parent.width / 2 - self.width / 2;
-        y: 12px;
+        y: parent.height * 0.3;
     }
 }
 
@@ -141,21 +133,21 @@ component RobotCard inherits Rectangle {
     in property <float> hp;
     in property <float> max_hp;
     in property <bool> is_blue;
-    in property <image> avatar; // 头像接口
+    in property <image> avatar; 
+    in property <length> font_size;
 
-    width: 60px;
-    height: 50px;
+    // width: 60px; // 移除固定
+    // height: 50px;
     
     property <float> hp_percent: max_hp > 0 ? hp / max_hp : 0;
     property <color> theme_color: is_blue ? #0088ff : #ff3333;
 
-    // 卡片背景 (平行四边形)
+    // 卡片背景
     Path {
         width: 100%; height: 100%;
         fill: #222222cc;
         stroke: #555; stroke-width: 1px;
         viewbox-x: 0; viewbox-y: 0; viewbox-width: 60; viewbox-height: 50;
-
         MoveTo { x: 10; y: 0; }
         LineTo { x: 60; y: 0; }
         LineTo { x: 50; y: 50; }
@@ -163,30 +155,18 @@ component RobotCard inherits Rectangle {
         Close {}
     }
 
-    // 头像区域 (预留)
-    Rectangle {
-        width: 30px; height: 30px;
-        x: 15px; y: 5px;
-        background: #000;
-        clip: true;
-        Image {
-            source: root.avatar;
-            width: 100%; height: 100%;
-        }
-    }
-
     // 编号
     Text {
         text: root.id;
-        color: white; font-weight: 700; font-size: 14px;
-        x: is_blue ? 40px : 5px; 
-        y: 20px;
+        color: white; font-weight: 700; font-size: root.font_size;
+        x: is_blue ? parent.width * 0.6 : parent.width * 0.1; 
+        y: parent.height * 0.3;
     }
 
     // 底部血条
     Rectangle {
-        y: 42px; x: 5px;
-        width: 50px; height: 4px;
+        y: parent.height * 0.85; x: 5px;
+        width: parent.width - 10px; height: parent.height * 0.1;
         background: #444;
         Rectangle {
             x: 0; y: 0;
@@ -201,7 +181,8 @@ component RobotCard inherits Rectangle {
 // 4. 顶部比分板
 // ==========================================
 component ScoreBoard inherits Rectangle {
-    width: 200px; height: 50px;
+    in property <length> font_size;
+    // width: 200px; height: 50px;
     
     // 背景
     Path {
@@ -209,7 +190,6 @@ component ScoreBoard inherits Rectangle {
         fill: #00000080;
         stroke: #444; stroke-width: 1px;
         viewbox-x: 0; viewbox-y: 0; viewbox-width: 200; viewbox-height: 50;
-        // 梯形
         MoveTo { x: 0; y: 0; }
         LineTo { x: 200; y: 0; }
         LineTo { x: 180; y: 50; }
@@ -224,7 +204,7 @@ component ScoreBoard inherits Rectangle {
         // 红分
         Text { 
             text: Callback_Factory.game_status.red-score; 
-            color: #ff3333; font-size: 24px; font-weight: 700; 
+            color: #ff3333; font-size: root.font_size * 1.5; font-weight: 700; 
         }
         
         // 时间
@@ -232,21 +212,20 @@ component ScoreBoard inherits Rectangle {
             alignment: center;
             Text { 
                 text: "Round " + Callback_Factory.game_status.current-round; 
-                color: #aaa; font-size: 10px; horizontal-alignment: center;
+                color: #aaa; font-size: root.font_size * 0.6; horizontal-alignment: center;
             }
             Text { 
-                // 格式化时间 mm:ss
                 property <int> min: Math.floor(Callback_Factory.game_status.stage-countdown-sec / 60);
                 property <int> sec: Callback_Factory.game_status.stage-countdown-sec - (min * 60);
                 text: (min < 10 ? "0"+min : min) + ":" + (sec < 10 ? "0"+sec : sec);
-                color: white; font-size: 20px; font-weight: 700; horizontal-alignment: center;
+                color: white; font-size: root.font_size * 1.2; font-weight: 700; horizontal-alignment: center;
             }
         }
 
         // 蓝分
         Text { 
             text: Callback_Factory.game_status.blue-score; 
-            color: #0088ff; font-size: 24px; font-weight: 700; 
+            color: #0088ff; font-size: root.font_size * 1.5; font-weight: 700; 
         }
     }
 }
@@ -258,80 +237,79 @@ export component GameStatus inherits Rectangle {
     in property <ComponentProps> props;
     in property <bool> is_selected;
 
-    width: 100%; height: 100%; // 通常这个组件是横跨屏幕顶部的
+    // 动态字体大小
+    property <length> dynamic_font_size: Callback_Factory.font_size * 0.8px;
+
     background: transparent;
 
     VerticalLayout {
-        spacing: 5px;
+        spacing: parent.height * 0.05;
         
-        // --- 第一行：建筑血量 & 比分 ---
+        // --- 第一行：建筑血量 & 比分 (占 60% 高度) ---
         HorizontalLayout {
+            height: 60%;
             alignment: center;
-            spacing: -10px; // 紧凑布局
+            spacing: -10px; 
 
             // 1. 红色方建筑
-            UnitBar { label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: false; }
-            UnitBar { label: "哨兵"; hp: 600; max-hp: 600; is_blue: false; } // 暂无哨兵数据接口，写死示例
-            BaseBar { hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: false; }
+            UnitBar { width: parent.width * 0.12; label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: false; font_size: root.dynamic_font_size; }
+            UnitBar { width: parent.width * 0.12; label: "哨兵"; hp: 600; max-hp: 600; is_blue: false; font_size: root.dynamic_font_size; } 
+            BaseBar { width: parent.width * 0.20; hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: false; font_size: root.dynamic_font_size; }
 
             // 2. 中间比分
-            ScoreBoard {}
+            ScoreBoard { width: parent.width * 0.12; font_size: root.dynamic_font_size; }
 
             // 3. 蓝色方建筑
-            BaseBar { hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: true; } // 需区分红蓝数据，这里暂用同一接口演示
-            UnitBar { label: "哨兵"; hp: 600; max-hp: 600; is_blue: true; }
-            UnitBar { label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: true; }
+            BaseBar { width: parent.width * 0.20; hp: Callback_Factory.global_unit_status.base-hp; max-hp: 5000; is_blue: true; font_size: root.dynamic_font_size; } 
+            UnitBar { width: parent.width * 0.12; label: "哨兵"; hp: 600; max-hp: 600; is_blue: true; font_size: root.dynamic_font_size; }
+            UnitBar { width: parent.width * 0.12; label: "前哨站"; hp: Callback_Factory.global_unit_status.outpost-hp; max-hp: 1500; is_blue: true; font_size: root.dynamic_font_size; }
         }
 
-        // --- 第二行：机器人 & 经济 ---
+        // --- 第二行：机器人 & 经济 (占 40% 高度) ---
         HorizontalLayout {
+            height: 40%;
             alignment: center;
             spacing: 20px;
 
-            // 1. 红色方机器人 (6 -> 1)
+            // 1. 红色方机器人
             HorizontalLayout {
                 spacing: 2px;
                 for i in 6 : RobotCard {
+                    width: root.width * 0.05; // 动态宽度
                     id: i + 1;
                     is_blue: false;
-                    // 安全访问：检查数组长度
-                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? 
-                        Callback_Factory.global_unit_status.robot-hp[i] : 0;
+                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? Callback_Factory.global_unit_status.robot-hp[i] : 0;
                     max_hp: 100;
+                    font_size: root.dynamic_font_size;
                 }
             }
 
             // 2. 经济面板
             Rectangle {
-                width: 120px; height: 30px;
+                width: root.width * 0.1; 
                 background: #00000080;
-                border-radius: 15px;
+                border-radius: self.height / 2;
                 
                 HorizontalLayout {
-                    alignment: center; spacing: 10px;
-                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #ff3333; font-weight: 700; }
-                    Rectangle { width: 20px; height: 20px; background: #ffd700; border-radius: 10px; } // 金币图标占位
-                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #0088ff; font-weight: 700; }
+                    alignment: center; spacing: 5px;
+                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #ff3333; font-weight: 700; font-size: root.dynamic_font_size; }
+                    Rectangle { width: 10px; height: 10px; background: #ffd700; border-radius: 5px; y: (parent.height -self.height)/2; } 
+                    Text { text: Callback_Factory.global_logistics_status.total-economy-obtained; color: #0088ff; font-weight: 700; font-size: root.dynamic_font_size; }
                 }
             }
 
-            // 3. 蓝色方机器人 (1 -> 6)
+            // 3. 蓝色方机器人
             HorizontalLayout {
                 spacing: 2px;
                 for i in 6 : RobotCard {
+                    width: root.width * 0.05;
                     id: i + 1;
                     is_blue: true;
-                    // 安全访问：检查数组长度
-                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? 
-                        Callback_Factory.global_unit_status.robot-hp[i] : 0;
+                    hp: i < Callback_Factory.global_unit_status.robot-hp.length ? Callback_Factory.global_unit_status.robot-hp[i] : 0;
                     max_hp: 100;
+                    font_size: root.dynamic_font_size;
                 }
             }
         }
     }
-    
-    // 选中框
-    // if (root.is_selected) : Rectangle {
-    //     border-width: 1px; border-color: yellow; background: transparent;
-    // }
 }
