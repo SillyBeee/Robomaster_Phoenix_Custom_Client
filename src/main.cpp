@@ -1,8 +1,10 @@
 #include "callback_center.hpp"
+#include "component_manager.hpp"
 #include "driver_ffmpeg_decoder.hpp"
 #include "driver_gamepad.hpp"
 #include "driver_mqtt.hpp"
 #include "driver_socket.hpp"
+#include "filesystem"
 #include "logger.hpp"
 #include "slint.h"
 #include "utils_cv.hpp"
@@ -10,17 +12,15 @@
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
 #include <thread>
-#include "component_manager.hpp"
-#include "filesystem"
 int main()
 {
-    auto main_window = MainWindow::create();
-    auto&& callback_factory = main_window->global<Callback_Factory>();
-    ComponentManager::GetInstance().Init(callback_factory);
     //加载参数
     std::filesystem::path source_path(PROJECT_SOURCE_DIR);
     std::filesystem::path config_path = source_path / "config" / "client_setting.json";
     std::filesystem::path components_path = source_path / "config" / "config.json";
+
+    auto main_window = MainWindow::create();
+    auto&& callback_factory = main_window->global<Callback_Factory>();
 
     callback_factory.on_open_url(
         [](slint::SharedString url)
@@ -34,12 +34,18 @@ int main()
     );
     callback_factory.on_set_fullscreen([&main_window](bool is_fullscreen)
                                        { callback_set_fullscreen(main_window, is_fullscreen); });
+    callback_factory.on_minimize_window([&main_window]()
+                                        { callback_minimize_window(main_window); });
+    callback_factory.on_maximize_window([&main_window](bool is_maximized)
+                                        { callback_maximize_window(main_window, is_maximized); });
+    callback_factory.on_close_window([&main_window]()
+                                    { callback_close_window(main_window); });
+    callback_factory.on_move_window([&main_window](float dx, float dy)
+                                    { callback_move_window(main_window, dx, dy); });
+    callback_factory.on_save_to_json([&callback_factory, &components_path]()
+                                     { COMPONENT_MANAGER.SaveComponents(components_path.string()); });
 
-    callback_factory.on_save_to_json([&callback_factory , &components_path](){
-        COMPONENT_MANAGER.SaveComponents(components_path.string());
-    });
-
-
+    COMPONENT_MANAGER.Init(callback_factory);
     COMPONENT_MANAGER.LoadSettings(config_path.string());
     COMPONENT_MANAGER.LoadComponents(components_path.string());
     // pose_test_slider(callback_factory);
@@ -48,6 +54,7 @@ int main()
     drivers::MqttClient mqtt_client("127.0.0.1");
     drivers::SocketImageReceiver socket_receiver("127.0.0.1", 3334, 16 * 1024 * 1024);
 
+    gamepad.Init();
     mqtt_client.Connect();
 
     std::atomic_bool stop_flag { false };
@@ -86,8 +93,7 @@ int main()
       }
     }
     // cv::destroyWindow("SocketFrame");
-    LOG_INFO("Socket display thread exiting");
-  });
+    LOG_INFO("Socket display thread exiting"); });
 
     main_window->run();
 

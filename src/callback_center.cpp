@@ -54,3 +54,27 @@ void callback_set_fullscreen(slint::ComponentHandle<MainWindow>& window,
     LOG_INFO("Set fullscreen mode to: {}", is_fullscreen);
     
 }
+
+void callback_minimize_window(slint::ComponentHandle<MainWindow>& window){
+    window->window().set_minimized(true);
+    LOG_INFO("Window minimized");
+}
+
+void callback_maximize_window(slint::ComponentHandle<MainWindow>& window , bool is_maximized){
+    window->window().set_maximized(is_maximized);
+    LOG_INFO("Window maximized");
+}
+
+void callback_close_window(slint::ComponentHandle<MainWindow>& window){
+    slint::quit_event_loop(); 
+    LOG_INFO("Window closed");
+}
+
+void callback_move_window(slint::ComponentHandle<MainWindow> &window, float dx, float dy)
+{   
+    auto pos = window->window().position();
+    window->window().set_position(slint::PhysicalPosition({
+        pos.x + static_cast<int>(dx), 
+        pos.y + static_cast<int>(dy)
+    }));
+}

@@ -1,5 +1,5 @@
 import { VerticalBox } from "std-widgets.slint";
-import { Callback_Factory } from "callback_factory.slint";
+import { Callback_Factory } from "../callback_factory.slint";
 
 component SideBarItem inherits Rectangle {
     in property <string> text;
@@ -80,7 +80,7 @@ export component SideBar inherits Rectangle {
         z: 1; // 放在上层
         
         item-menu := SideBarItem {
-            icon: @image-url("icons/open.svg");
+            icon: @image-url("../icons/open.svg");
             text: "主菜单";
             index: -1; 
             show_text: root.is_expanded;
@@ -95,7 +95,7 @@ export component SideBar inherits Rectangle {
 
 
         item-dashboard := SideBarItem {
-            icon: @image-url("icons/dashboard.svg");
+            icon: @image-url("../icons/dashboard.svg");
             text: "Dashboard";
             index: 0;
             show_text: root.is_expanded;
@@ -103,14 +103,14 @@ export component SideBar inherits Rectangle {
         }
         
         item-design := SideBarItem {
-            icon: @image-url("icons/design.svg");
+            icon: @image-url("../icons/design.svg");
             text: "Design";
             index: 1;
             show_text: root.is_expanded;
         }
 
         item-settings := SideBarItem {
-            icon: @image-url("icons/setting.svg");
+            icon: @image-url("../icons/setting.svg");
             text: "Settings";
             index: 2;
             show_text: root.is_expanded;
@@ -119,7 +119,7 @@ export component SideBar inherits Rectangle {
         Rectangle { vertical-stretch: 1; }
 
         item-about := SideBarItem {
-            icon: @image-url("icons/about.svg");
+            icon: @image-url("../icons/about.svg");
             text: "About";
             index: 3;
             show_text: root.is_expanded;

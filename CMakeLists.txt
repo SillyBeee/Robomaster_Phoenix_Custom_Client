@@ -46,7 +46,7 @@ file(GLOB SOURCES
 
 
 add_executable(RM_Client src/main.cpp ${SOURCES})
-slint_target_sources(RM_Client ui/app-window.slint)
+slint_target_sources(RM_Client ui/mainwindow/app-window.slint)
 
 target_link_libraries(RM_Client PRIVATE 
 Slint::Slint 

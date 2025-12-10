@@ -10,11 +10,13 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
 
 void callback_set_fullscreen(slint::ComponentHandle<MainWindow>& window, bool is_fullscreen);
 
+void callback_minimize_window(slint::ComponentHandle<MainWindow>& window);
 
+void callback_maximize_window(slint::ComponentHandle<MainWindow>& window , bool is_maximized);
 
+void callback_close_window(slint::ComponentHandle<MainWindow>& window);
 
-
-
+void callback_move_window(slint::ComponentHandle<MainWindow>& window, float dx, float dy);
 
 
 
