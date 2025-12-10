@@ -1,50 +1,329 @@
-import {Callback_Factory} from "../../callback_factory.slint";
+import { Callback_Factory, Callback-Factory, Callback-Factory } from "../../callback_factory.slint";
+import { Button, Slider, LineEdit } from "std-widgets.slint";
 
-// 建议改回 Rectangle 以便更好地控制全屏遮罩，PopupWindow 也可以但定位较麻烦
+// ==========================================
+// 1. 基础 UI 组件库 (Web 风格)
+// ==========================================
+
+// 顶部选项卡按钮
+component TabButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> selected;
+    callback clicked;
+
+    width: Callback_Factory.font_size*10px; height: Callback_Factory.font_size*4px;
+    background: selected ? #3a3f55 : transparent;
+    border-radius: 6px;
+    animate background { duration: 200ms; }
+
+    Text {
+        text: root.text;
+        color: root.selected ? #ffffff : #8890a0;
+        font-weight: root.selected ? 700 : 400;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+        font-size: Callback_Factory.font_size*1.3px;
+    }
+
+    TouchArea { clicked => { root.clicked(); } }
+}
+
+// 配置分组卡片
+component ConfigCard inherits Rectangle {
+    in property <string> title;
+    background: #252836; // 比背景稍亮
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #333645;
+    
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        
+        // 标题
+        Text {
+            text: root.title;
+            color: #ffffff;
+            font-size: Callback-Factory.font_size*1.4px;
+            font-weight: 700;
+        }
+        
+        // 分割线
+        Rectangle { height: 1px; background: #333645; width: 100%; }
+        
+        // 内容插槽
+        @children
+    }
+}
+
+// 现代风格输入框行
+component InputRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> placeholder;
+    in property <string> value;
+    
+    height: 32px;
+    spacing: 10px;
+    alignment: center;
+
+    Text {
+        text: root.label;
+        color: #a0a5b5;
+        font-size: Callback_Factory.font_size*1.3px; 
+        width: 100px; // 固定标签宽度
+        vertical-alignment: center;
+    }
+
+    Rectangle {
+        background: #1a1c24;
+        border-radius: 4px;
+        border-width: 1px;
+        // border-color: input_area.has-focus ? #4488ff : #333645;
+        
+        // TextInput {
+        //     id: input_area;
+        //     text: root.value;
+        //     color: white;
+        //     font-size: 13px;
+        //     padding-left: 8px;
+        //     vertical-alignment: center;
+        //     single-line: true;
+        // }
+        
+        // if (input_area.text == "") : Text {
+        //     text: root.placeholder;
+        //     color: #555;
+        //     font-size: 13px;
+        //     x: 8px;
+        //     vertical-alignment: center;
+        // }
+    }
+}
+
+// 现代风格滑块行
+component SliderRow inherits VerticalLayout {
+    in property <string> label;
+    in property <string> sub_label; // 比如 "0.25"
+    in-out property <float> value;
+    in property <float> min;
+    in property <float> max;
+
+    spacing: 6px;
+
+    HorizontalLayout {
+        alignment: space-between;
+        Text { text: root.label; color: #a0a5b5; font-size: Callback_Factory.font_size*1.3px; }
+        Text { text: root.sub_label; color: #4488ff; font-size: Callback_Factory.font_size*1.3px;  font-weight: 700; }
+    }
+
+    Slider {
+        value: root.value;
+        minimum: root.min;
+        maximum: root.max;
+        height: 20px;
+        changed(v) => { root.value = v; }
+    }
+    
+    Text {
+        text: "范围: " + root.min + " - " + root.max;
+        color: #555; font-size: Callback_Factory.font_size*1px; 
+    }
+}
+
+// 只读信息行
+component InfoRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> value;
+    in property <color> value_color: white;
+
+    alignment: space-between;
+    Text { text: root.label; color: #a0a5b5; font-size: Callback_Factory.font_size*1.3px; }
+    Text { text: root.value; color: root.value_color; font-size: Callback_Factory.font_size*1.3px; }
+}
+
+// ==========================================
+// 2. 主窗口组件
+// ==========================================
+
 export component Performance_Select_Window inherits Rectangle {
-    width: 100%;
-    height: 100%;
-    // 1. 全屏背景变暗 (模拟遮罩)
-    background: #00000060; 
+    background: #00000080; // 全屏遮罩
+    border-radius: 20px;
+    border-width: 1px;
+
+    // 状态
+    property <int> active_tab: 0; // 0: Network, 1: Robot
 
     // 阻止点击穿透
     TouchArea {}
-
-    // 2. 磨砂玻璃窗口
+    // 主面板
     Rectangle {
-        width: 80%;
-        height: 80%;
+        width: 100%; // 固定宽度，类似 Web 弹窗
+        height: 100%;
         x: (parent.width - self.width) / 2;
         y: (parent.height - self.height) / 2;
-
-        border-radius: 16px;
-
-        // --- 关键：拟态玻璃效果 ---
-        
-        // A. 背景使用半透明渐变，模拟光照
-        background: @linear-gradient(135deg, #3a3f55cc 0%, #1d1f2acc 100%);
-        
-        // B. 边框使用半透明白色，模拟玻璃边缘反光
+        background: #1e1e2e; // 深色背景
+        border-radius: 20px;
         border-width: 1px;
-        border-color: #ffffff30;
+        border-color: #333645;
+        clip: true; // 裁剪圆角
 
-        // C. (可选) 内部再加一层微弱的亮光
-        Rectangle {
-            width: 100%; height: 100%;
-            border-radius: parent.border-radius;
-            background: @linear-gradient(180deg, #ffffff10 0%, transparent 40%);
-        }
-
-        // 内容区域
         VerticalLayout {
-            padding: 20px;
-            alignment: center;
-            Text {
-                text: "Performance Select Window";
-                color: white;
-                font-size: 24px;
-                font-weight: 700;
-                horizontal-alignment: center;
+            // --- 1. 顶部标题栏 ---
+            Rectangle {
+                height: Callback_Factory.font_size*4.2px;
+                background: #1e1e2e;
+                
+                HorizontalLayout {
+                    padding-left: 24px; padding-right: 24px;
+                    padding-bottom: 2px;
+                    alignment: space-between;
+                    
+                    Text {
+                        text: "系统设置";
+                        font-size: Callback_Factory.font_size*1.8px;  font-weight: 700; color: white;
+                        vertical-alignment: center;
+                    }
+
+                    // 选项卡区域
+                    HorizontalLayout {
+                        spacing: 4px;
+                        alignment: center;
+                        y:4px;
+                        
+                        Rectangle {
+                            background: #252836;
+                            border-radius: 8px;
+                            
+                            HorizontalLayout {
+                                TabButton { text: "网络配置"; selected: root.active_tab == 0; clicked => { root.active_tab = 0; } }
+                                TabButton { text: "机器人"; selected: root.active_tab == 1; clicked => { root.active_tab = 1; } }
+                            }
+                        }
+                    }
+                }
+                
+                // 底部细线
+                Rectangle { y: parent.height - 1px; height: 1px; background: #333645; width: 100%; }
+            }
+
+            // --- 2. 内容滚动区 ---
+            Flickable {
+                viewport-height: content_layout.preferred-height;
+                
+                content_layout := VerticalLayout {
+                    padding: 24px;
+                    spacing: 20px;
+                    alignment: start;
+
+                    // === TAB 0: 网络配置 ===
+                    if (root.active_tab == 0) : VerticalLayout {
+                        spacing: 20px;
+                        
+                        // MQTT 配置
+                        ConfigCard {
+                            title: "MQTT 消息总线";
+                            InputRow { label: "Broker IP"; value: "127.0.0.1"; placeholder: "例如 192.168.1.100"; }
+                            InputRow { label: "端口 (Port)"; value: "1883"; placeholder: "默认 1883"; }
+                            InputRow { label: "Topic 前缀"; value: "robot/chassis"; }
+                            InfoRow { label: "连接状态"; value: "已连接"; value_color: #44ffaa; }
+                        }
+
+                        // Socket 配置
+                        ConfigCard {
+                            title: "Socket 实时控制";
+                            InputRow { label: "目标 IP"; value: "192.168.1.120"; }
+                            InputRow { label: "UDP 端口"; value: "8080"; }
+                            InfoRow { label: "延迟 (RTT)"; value: "12 ms"; value_color: #4488ff; }
+                        }
+                    }
+
+                    // === TAB 1: 机器人配置 ===
+                    if (root.active_tab == 1) : VerticalLayout {
+                        spacing: 20px;
+
+                        // 性能参数
+                        ConfigCard {
+                            title: "运动性能 (Performance)";
+                            SliderRow { 
+                                label: "最大平移速度 (m/s)"; 
+                                sub_label: "1.5"; 
+                                value: 1.5; min: 0.5; max: 3.0; 
+                            }
+                            SliderRow { 
+                                label: "最大旋转速度 (rad/s)"; 
+                                sub_label: "2.0"; 
+                                value: 2.0; min: 1.0; max: 6.0; 
+                            }
+                            SliderRow { 
+                                label: "云台灵敏度"; 
+                                sub_label: "0.6"; 
+                                value: 0.6; min: 0.1; max: 1.0; 
+                            }
+                        }
+
+                        // 机器人信息
+                        ConfigCard {
+                            title: "设备信息 (Device Info)";
+                            InfoRow { label: "机器人 ID"; value: "Robot_01_Infantry"; }
+                            InfoRow { label: "固件版本"; value: "v2.3.1-beta"; }
+                            InfoRow { label: "电池电压"; value: "24.5 V"; value_color: #ffd54f; }
+                            InfoRow { label: "CPU 温度"; value: "42°C"; }
+                        }
+                    }
+                }
+            }
+
+            // --- 3. 底部操作栏 ---
+            Rectangle {
+                height: 70px;
+                background: #1e1e2e;
+                
+                // 顶部细线
+                Rectangle { y: 0; height: 1px; background: #333645; width: 100%; }
+
+                HorizontalLayout {
+                    y:10px;
+                    padding-left: 24px; padding-right: 24px;
+                    alignment: space-between;
+                    
+                    // 左侧提示
+                    HorizontalLayout {
+                        spacing: 8px;
+
+                        Rectangle {
+                            width: Callback_Factory.font_size*2px; height: Callback_Factory.font_size*2px; border-radius: 4px; border-width: 1px; border-color: #666;
+                            Text { text: "P"; color: #aaa; font-size: Callback_Factory.font_size*1.2px;  x: 6px; y: 0; }
+                        }
+                        Text { text: "按 P 关闭菜单"; color: #666; font-size: Callback_Factory.font_size*1.2px;  }
+                    }
+
+                    // 右侧按钮
+                    HorizontalLayout {
+                        spacing: 12px;
+
+
+                        // 取消按钮
+                        Rectangle {
+                            width: Callback_Factory.font_size*8px; height: Callback_Factory.font_size*3.6px; border-radius: 6px; background: #2a2d3d;
+                            Text { text: "取消"; color: white; font-size: Callback_Factory.font_size*1.3px;   }
+                            TouchArea { clicked => { /* 关闭逻辑 */ } }
+                        }
+
+                        // 应用按钮 (高亮)
+                        Rectangle {
+                            width: Callback_Factory.font_size*12px; height: Callback_Factory.font_size*3.6px; border-radius: 6px; 
+                            background: @linear-gradient(90deg, #4488ff 0%, #4466ff 100%);
+                            
+                            HorizontalLayout {
+                                alignment: center; spacing: 6px;
+                                Text { text: "⚙"; color: white; font-size: Callback_Factory.font_size*2px;  vertical-alignment: center; }
+                                Text { text: "应用并连接"; color: white; font-size: Callback_Factory.font_size*1.3px;  font-weight: 700; vertical-alignment: center; }
+                            }
+                            
+                            TouchArea { clicked => { /* 保存逻辑 */ } }
+                        }
+                    }
+                }
             }
         }
     }

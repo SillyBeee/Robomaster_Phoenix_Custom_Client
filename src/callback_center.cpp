@@ -35,9 +35,9 @@ void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::
             size.width = float(width);
             size.height = float(height);
             window->window().set_size(size);
-            window->global<Callback_Factory>()
-                .set_font_size(std::min(float(width), float(height)) * 0.015f);
-            LOG_INFO("Set font size to: {}", std::min(float(width), float(height)) * 0.015f);
+            float font_size = std::min(float(width), float(height)) * 0.015f;
+            window->global<Callback_Factory>().set_font_size(font_size);
+            LOG_INFO("Set font size to: {:.2f}", static_cast<double>(font_size));
             LOG_INFO("Resolution set to: {}x{}", width, height);
         }
     }
