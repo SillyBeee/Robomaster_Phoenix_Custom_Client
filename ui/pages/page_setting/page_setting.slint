@@ -1,38 +1,440 @@
 import { VerticalBox, ComboBox, CheckBox } from "std-widgets.slint";
 import { Callback_Factory } from "../../callback_factory.slint";
 
+// ===============================
+// Web 风格组件
+// ===============================
+component TabButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> selected;
+    callback clicked;
+
+    height: Callback_Factory.font_size * 4px;
+    min-width: Callback_Factory.font_size * 10px;
+
+    background: selected ? #3a3f55 : transparent;
+    border-radius: 6px;
+    animate background { duration: 180ms; }
+
+    Text {
+        text: root.text;
+        color: root.selected ? #ffffff : #9aa3b2;
+        font-size: Callback_Factory.font_size * 1.25px;
+        font-weight: root.selected ? 700 : 500;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+
+    TouchArea { clicked => root.clicked(); }
+}
+
+component ConfigCard inherits Rectangle {
+    in property <string> title;
+    in property <string> desc;
+
+    background: #252836;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: #333645;
+
+    VerticalLayout {
+        padding: Callback_Factory.font_size * 1.6px;
+        spacing: Callback_Factory.font_size * 1.2px;
+
+        VerticalLayout {
+            spacing: 4px;
+            Text {
+                text: root.title;
+                color: #ffffff;
+                font-size: Callback_Factory.font_size * 1.55px;
+                font-weight: 800;
+            }
+            if (root.desc != "") : Text {
+                text: root.desc;
+                color: #7f879a;
+                font-size: Callback_Factory.font_size * 1.1px;
+            }
+        }
+
+        Rectangle { height: 1px; background: #333645; width: 100%; }
+
+        @children
+    }
+}
+
+component SettingRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> hint;
+
+    spacing: Callback_Factory.font_size * 1.2px;
+    alignment: space-between;
+
+    VerticalLayout {
+        spacing: 4px;
+        Text {
+            text: root.label;
+            color: #cfd6e6;
+            font-size: Callback_Factory.font_size * 1.25px;
+            font-weight: 650;
+        }
+        if (root.hint != "") : Text {
+            text: root.hint;
+            color: #6f778a;
+            font-size: Callback_Factory.font_size * 1.05px;
+        }
+    }
+
+    // 右侧插槽
+    @children
+}
+
+component Pill inherits Rectangle {
+    in property <string> text;
+    in property <color> text_color: #ffffff;
+    in property <color> bg_color: #1a1c24;
+    in property <bool> danger: false;
+
+    height: Callback_Factory.font_size * 3.2px;
+    min-width: Callback_Factory.font_size * 9px;
+
+    background: root.danger ? #ff3b3b25 : root.bg_color;
+    border-width: 1px;
+    border-color: root.danger ? #ff3b3b70 : #333645;
+    border-radius: 8px;
+
+    Text {
+        text: root.text;
+        color: root.text_color;
+        font-size: Callback_Factory.font_size * 1.15px;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+}
+
+component MappingRow inherits HorizontalLayout {
+    in property <string> action;
+    in property <string> current_binding;
+    in property <bool> listening;
+
+    callback request_rebind();   // 点击“绑定框”
+    callback request_clear();    // 点击“清除”
+
+    spacing: Callback_Factory.font_size * 1.2px;
+    alignment: space-between;
+    height: Callback_Factory.font_size * 4.6px;
+
+    Text {
+        text: root.action;
+        color: #cfd6e6;
+        font-size: Callback_Factory.font_size * 1.25px;
+        vertical-alignment: center;
+    }
+
+    HorizontalLayout {
+        spacing: Callback_Factory.font_size * 1.0px;
+        alignment: end;
+
+        // 绑定框（点击进入监听态）
+        Rectangle {
+            height: Callback_Factory.font_size * 3.2px;
+            min-width: Callback_Factory.font_size * 14px;
+            border-radius: 8px;
+            background: root.listening ? #4488ff20 : #1a1c24;
+            border-width: 1px;
+            border-color: root.listening ? #4488ff : #333645;
+
+            Text {
+                text: root.listening ? "按下一个按键..." : (root.current_binding == "" ? "未设置" : root.current_binding);
+                color: root.listening ? #a7c6ff : (root.current_binding == "" ? #7f879a : #ffffff);
+                font-size: Callback_Factory.font_size * 1.15px;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+
+            TouchArea { clicked => root.request_rebind(); }
+        }
+
+        // 清除按钮（仅前端占位）
+        Rectangle {
+            width: Callback_Factory.font_size * 6px;
+            height: Callback_Factory.font_size * 3.2px;
+            border-radius: 8px;
+            background: #1a1c24;
+            border-width: 1px;
+            border-color: #333645;
+
+            Text {
+                text: "清除";
+                color: #9aa3b2;
+                font-size: Callback_Factory.font_size * 1.1px;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+
+            TouchArea { clicked => root.request_clear(); }
+        }
+    }
+}
+
+// ===============================
+// Page_Setting
+// ===============================
 export component Page_Setting inherits Rectangle {
-    // width: 100%;
     height: 100%;
     background: @linear-gradient(180deg, #5c6175 0%, #080114 100%);
 
-    VerticalBox {
-        alignment: start;
-        padding: 20px;
-        ComboBox {
-            width: 200px;
-            height: 30px;
-            model: [ "860x540","1600x900", "1920x1080", "2560x1440", "2560x1600", "3840x2160" ];
-            current-index: Callback_Factory.current-resolution-index;
-            selected(current-value) => {
-                Callback_Factory.set_resolution(current-value);
-                Callback_Factory.current-resolution-index = self.current-index;
+    // 0: 常规  1: 手柄映射  2: 键盘映射
+    property <int> active_tab: 0;
+
+    // 仅用于前端表现：当前处于“等待输入”的行
+    // gamepad
+    property <int> listening_gamepad_index: -1;
+    // keyboard
+    property <int> listening_keyboard_index: -1;
+
+    VerticalLayout {
+        padding: Callback_Factory.font_size * 2px;
+        spacing: Callback_Factory.font_size * 1.6px;
+
+        // 顶部标题 + Tabs
+        Rectangle {
+            height: Callback_Factory.font_size * 5.2px;
+            background: #1e1e2e;
+            border-radius: 12px;
+            border-width: 1px;
+            border-color: #333645;
+
+            HorizontalLayout {
+                padding-left: Callback_Factory.font_size * 2px;
+                padding-right: Callback_Factory.font_size * 2px;
+                alignment: space-between;
+
+                VerticalLayout {
+                    spacing: 2px;
+                    Text {
+                        text: "设置";
+                        color: #ffffff;
+                        font-size: Callback_Factory.font_size * 1.8px;
+                        font-weight: 900;
+                    }
+                    Text {
+                        text: "显示与输入映射";
+                        color: #7f879a;
+                        font-size: Callback_Factory.font_size * 1.1px;
+                    }
+                }
+
+                Rectangle {
+                    background: #252836;
+                    border-radius: 10px;
+                    border-width: 1px;
+                    border-color: #333645;
+
+                    HorizontalLayout {
+                        padding: 4px;
+                        spacing: 4px;
+                        TabButton { text: "常规"; selected: root.active_tab == 0; clicked => {root.active_tab = 0;} }
+                        TabButton { text: "手柄映射"; selected: root.active_tab == 1; clicked =>{root.active_tab = 1;}  }
+                        TabButton { text: "键盘映射"; selected: root.active_tab == 2; clicked =>{root.active_tab = 2;}  }
+                    }
+                }
             }
         }
 
-        CheckBox {
-            x: 20px;
-            // y: 100px;
-            text: "全屏模式";
-            checked: Callback_Factory.is_fullscreen;
-            toggled() => {
-                Callback_Factory.set_fullscreen(self.checked);
-                Callback_Factory.is_fullscreen = self.checked;
+        // 内容区（可滚动）
+        Flickable {
+            // clip: true;
+            viewport-height: content.preferred-height;
+
+            content := VerticalLayout {
+                spacing: Callback_Factory.font_size * 1.6px;
+
+                // =======================
+                // TAB 0：常规设置（保留原功能）
+                // =======================
+                if (root.active_tab == 0) : VerticalLayout {
+                    spacing: Callback_Factory.font_size * 1.6px;
+
+                    ConfigCard {
+                        title: "显示设置";
+                        desc: "分辨率与显示模式";
+
+                        SettingRow {
+                            label: "分辨率";
+                            hint: "更改窗口渲染尺寸（部分平台可能需要重启生效）";
+
+                            ComboBox {
+                                width: Callback_Factory.font_size * 20px;
+                                height: Callback_Factory.font_size * 3.2px;
+                                model: [ "860x540","1600x900", "1920x1080", "2560x1440", "2560x1600", "3840x2160" ];
+                                current-index: Callback_Factory.current-resolution-index;
+                                selected(current-value) => {
+                                    Callback_Factory.set_resolution(current-value);
+                                    Callback_Factory.current-resolution-index = self.current-index;
+                                }
+                            }
+                        }
+
+                        Rectangle { height: 8px; background: transparent; }
+
+                        SettingRow {
+                            label: "全屏模式";
+                            hint: "切换全屏/窗口化";
+
+                            CheckBox {
+                                text: "";
+                                checked: Callback_Factory.is_fullscreen;
+                                toggled() => {
+                                    Callback_Factory.set_fullscreen(self.checked);
+                                    Callback_Factory.is_fullscreen = self.checked;
+                                }
+                            }
+                        }
+                    }
+
+                    ConfigCard {
+                        title: "界面";
+                        desc: "仅前端占位，可后续接入配置文件";
+
+                        SettingRow {
+                            label: "动画质量";
+                            hint: "高质量可能更耗性能（占位）";
+                            Pill { text: "高"; }
+                        }
+
+                        SettingRow {
+                            label: "UI 缩放";
+                            hint: "跟随 Callback_Factory.font_size（占位）";
+                            Pill { text: "自动"; }
+                        }
+                    }
+                }
+
+                // =======================
+                // TAB 1：手柄映射
+                // =======================
+                if (root.active_tab == 1) : VerticalLayout {
+                    spacing: Callback_Factory.font_size * 1.6px;
+
+                    ConfigCard {
+                        title: "手柄按键映射";
+                        desc: "点击右侧绑定框，然后按下手柄按键（暂未实现实际捕获）";
+
+                        // 映射列表（前端示例）
+                        // 后续你可以把这些改成 model 驱动（ListView），并从 C++ 传入
+                        MappingRow {
+                            action: "前进/油门";
+                            current_binding: "RT";
+                            listening: root.listening_gamepad_index == 0;
+                            request_rebind() => { root.listening_gamepad_index = 0; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "后退/刹车";
+                            current_binding: "LT";
+                            listening: root.listening_gamepad_index == 1;
+                            request_rebind() => { root.listening_gamepad_index = 1; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "左转";
+                            current_binding: "LS X-";
+                            listening: root.listening_gamepad_index == 2;
+                            request_rebind() => { root.listening_gamepad_index = 2; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "右转";
+                            current_binding: "LS X+";
+                            listening: root.listening_gamepad_index == 3;
+                            request_rebind() => { root.listening_gamepad_index = 3; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "菜单（P键）";
+                            current_binding: "START";
+                            listening: root.listening_gamepad_index == 4;
+                            request_rebind() => { root.listening_gamepad_index = 4; }
+                            request_clear() => { /* TODO */ }
+                        }
+
+                        Rectangle { height: 6px; background: transparent; }
+
+                        HorizontalLayout {
+                            alignment: end;
+                            spacing: Callback_Factory.font_size * 1.0px;
+
+                            Pill { text: "恢复默认"; }
+                            Pill { text: "应用"; bg_color: #4488ff30; text_color: #a7c6ff; }
+                        }
+                    }
+                }
+
+                // =======================
+                // TAB 2：键盘映射
+                // =======================
+                if (root.active_tab == 2) : VerticalLayout {
+                    spacing: Callback_Factory.font_size * 1.6px;
+
+                    ConfigCard {
+                        title: "键盘按键映射";
+                        desc: "点击绑定框，然后按下键盘按键（暂未实现实际捕获）";
+
+                        MappingRow {
+                            action: "前进";
+                            current_binding: "W";
+                            listening: root.listening_keyboard_index == 0;
+                            request_rebind() => { root.listening_keyboard_index = 0; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "后退";
+                            current_binding: "S";
+                            listening: root.listening_keyboard_index == 1;
+                            request_rebind() => { root.listening_keyboard_index = 1; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "左移";
+                            current_binding: "A";
+                            listening: root.listening_keyboard_index == 2;
+                            request_rebind() => { root.listening_keyboard_index = 2; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "右移";
+                            current_binding: "D";
+                            listening: root.listening_keyboard_index == 3;
+                            request_rebind() => { root.listening_keyboard_index = 3; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "开火/确认";
+                            current_binding: "Space";
+                            listening: root.listening_keyboard_index == 4;
+                            request_rebind() => { root.listening_keyboard_index = 4; }
+                            request_clear() => { /* TODO */ }
+                        }
+                        MappingRow {
+                            action: "打开设置菜单";
+                            current_binding: "P";
+                            listening: root.listening_keyboard_index == 5;
+                            request_rebind() => { root.listening_keyboard_index = 5; }
+                            request_clear() => { /* TODO */ }
+                        }
+
+                        Rectangle { height: 6px; background: transparent; }
+
+                        HorizontalLayout {
+                            alignment: end;
+                            spacing: Callback_Factory.font_size * 1.0px;
+
+                            Pill { text: "恢复默认"; }
+                            Pill { text: "应用"; bg_color: #4488ff30; text_color: #a7c6ff; }
+                        }
+                    }
+                }
             }
         }
     }
-    
-   
-    
-    
 }
