@@ -2,7 +2,7 @@
 #include "app-window.h"
 #include "logger.hpp"
 #include "protocol.pb.h"
-#include "utils_json.hpp"
+#include "utils_json_refactor.hpp"
 #include <format> 
 
 
@@ -22,7 +22,7 @@ void ComponentManager::LoadSettings(const std::string& config_path) {
         return;
     }
 
-    ClientJsonUtils utils;
+    JsonUtils<ClientConfig> utils;
     if (!utils.LoadJsonFromFile(config_path)) {
         LOG_ERROR("Failed to load configuration from {}", config_path);
         return;
@@ -43,18 +43,17 @@ void ComponentManager::LoadComponents(std::string config_path) {
     auto components_vector = factory_ptr_->get_components();
     size_t count = components_vector->row_count();
     LOG_INFO("Read {} components from Callback_Factory", count);
-    
-    ComponentJsonUtils utils;
+    JsonUtils<ComponentsConfig> utils;
     if (!utils.LoadJsonFromFile(config_path)) {
         LOG_ERROR("Failed to load components configuration from {}", config_path);
         return;
     }
     auto& configs = utils.GetConfig();
-    LOG_INFO("Loaded {} components from JSON file", configs.size());
+    LOG_INFO("Loaded {} components from JSON file", configs.components.size());
 
     std::vector<ComponentData> slint_components_data;
-    slint_components_data.reserve(configs.size());
-    for (const auto& config : configs) {
+    slint_components_data.reserve(configs.components.size());
+    for (const auto& config : configs.components) {
         ComponentData data;
         data.type = config.type;
         data.rel_x = config.rel_x;
@@ -81,8 +80,8 @@ void ComponentManager::SaveComponents(const std::string& config_path) {
     size_t count = components_vector->row_count();
     LOG_INFO("Saving {} components to JSON file", count);
 
-    ComponentJsonUtils utils;
-    std::vector<ComponentConfig> configs;
+    JsonUtils<ComponentsConfig> utils;
+    ComponentsConfig configs;
     for (size_t i = 0; i < count; ++i) {
         auto data = components_vector->row_data(i);
         ComponentConfig config;
@@ -103,14 +102,14 @@ void ComponentManager::SaveComponents(const std::string& config_path) {
         
         config.opacity = data->opacity;
         config.layer = data->layer;
-        configs.push_back(config);
+        configs.components.push_back(config);
     }
     utils.SetConfig(configs);
     if (!utils.SaveJsonToFile(config_path)) {
         LOG_ERROR("Failed to save components configuration to {}", config_path);
         return;
     }
-    LOG_INFO("Successfully saved {} components to {}", configs.size(), config_path);
+    LOG_INFO("Successfully saved {} components to {}", configs.components.size(), config_path);
 }
 
 
