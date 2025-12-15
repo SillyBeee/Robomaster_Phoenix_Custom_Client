@@ -30,7 +30,7 @@ export struct ComponentData {
 //为了防止回调透传这种情况，使用回调工厂统一管理后端复杂回调
 export global Callback_Factory {
     // 全局变量
-    in-out property <int> current-resolution-index: 0; // 当前分辨率索引
+    in-out property <int> current-resolution-index: 2; // 当前分辨率索引
     in-out property <int> current-index: 0;  //当前页索引
     in-out property <bool> is_fullscreen: false; //当前是否全屏
     in-out property <float> font_size: 16.2; //全局字体大小比例

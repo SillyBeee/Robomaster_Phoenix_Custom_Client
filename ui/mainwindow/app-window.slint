@@ -22,7 +22,7 @@ component WindowButton inherits Rectangle {
     in property <color> press-color: #ffffff40;
     callback clicked;
 
-    width: 60px; height: 40px;
+    width: 60px; height: 100%;
     background: touch.pressed ? root.press-color : (touch.has-hover ? root.hover-color : transparent);
     animate background { duration: 100ms; }
 
@@ -77,8 +77,8 @@ export component MainWindow inherits Window {
 
         // 5. 自定义标题栏
         if (root.menu-opacity > 0.5) : Rectangle {
-            x: 0; y: 0; width: 100%; height: 40px;
-            background: #050518; // 标题栏颜色
+            x: 0; y: 0; width: 100%; height: 30px;
+            background: @linear-gradient(90deg, #1a191924 0%, #84828205 100%); // 标题栏颜色
             z: 100; // 保证在最上层
             Text {
                 text: root.title;

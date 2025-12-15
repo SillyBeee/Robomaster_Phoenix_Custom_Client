@@ -294,13 +294,7 @@ export component Page_Setting inherits Rectangle {
 
                     ConfigCard {
                         title: "界面";
-                        desc: "仅前端占位，可后续接入配置文件";
 
-                        SettingRow {
-                            label: "动画质量";
-                            hint: "高质量可能更耗性能（占位）";
-                            Pill { text: "高"; }
-                        }
 
                         SettingRow {
                             label: "UI 缩放";
@@ -315,6 +309,18 @@ export component Page_Setting inherits Rectangle {
                 // =======================
                 if (root.active_tab == 1) : VerticalLayout {
                     spacing: Callback_Factory.font_size * 1.6px;
+
+                    ConfigCard{
+                        title: "手柄设置";
+                        SettingRow {
+                            label: "当前手柄连接状态";
+                            Pill{ text: "未连接"; }
+                        }
+                        SettingRow{
+                            label: "重新扫描手柄";
+                            Pill{ text: "扫描"; }
+                        }
+                    }
 
                     ConfigCard {
                         title: "手柄按键映射";
