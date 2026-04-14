@@ -18,6 +18,7 @@ find_package(PahoMqttCpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(fmt REQUIRED)
 
 # --- 查找 FFmpeg ---
 find_package(PkgConfig REQUIRED)
@@ -60,6 +61,7 @@ ${AVCODEC_LIBRARIES}
 ${AVFORMAT_LIBRARIES}
 ${AVUTIL_LIBRARIES}
 ${SWSCALE_LIBRARIES}
+ fmt::fmt
 )
 
 

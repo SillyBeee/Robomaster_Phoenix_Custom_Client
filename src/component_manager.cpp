@@ -3,7 +3,7 @@
 #include "logger.hpp"
 #include "protocol.pb.h"
 #include "utils_json_refactor.hpp"
-#include <format> 
+#include <fmt/format.h>
 
 
 ComponentManager& ComponentManager::GetInstance() {
@@ -92,10 +92,10 @@ void ComponentManager::SaveComponents(const std::string& config_path) {
         config.rel_height = data->rel_height;
         
         // 颜色转换逻辑
-        config.color = std::format("#{:02X}{:02X}{:02X}",
-                                    static_cast<int>(data->color.color().red()),
-                                    static_cast<int>(data->color.color().green()),
-                                    static_cast<int>(data->color.color().blue()));
+        config.color = fmt::format("#{:02X}{:02X}{:02X}",
+                       static_cast<int>(data->color.color().red()),
+                       static_cast<int>(data->color.color().green()),
+                       static_cast<int>(data->color.color().blue()));
         if (data->color.color().alpha() == 0) {
             config.color = "transparent";
         }

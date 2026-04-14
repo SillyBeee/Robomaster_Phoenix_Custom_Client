@@ -1,248 +1,308 @@
 syntax = "proto3";
 
-message RemoteControl { 
- int32 mouse_x = 1; 
- int32 mouse_y = 2; 
- int32 mouse_z = 3; 
- bool left_button_down = 4; 
- bool right_button_down = 5; 
- uint32 keyboard_value = 6; 
- bool mid_button_down = 7; 
- bytes data = 8; 
-} 
-
-message GameStatus { 
- uint32 current_round = 1; 
- uint32 total_rounds = 2; 
- uint32 red_score = 3; 
- uint32 blue_score = 4; 
- uint32 current_stage = 5; 
- int32 stage_countdown_sec = 6; 
- int32 stage_elapsed_sec = 7; 
- bool is_paused = 8; 
+message KeyboardMouseControl {
+  optional int32  mouse_x            = 1; // 鼠标X轴移动速度，负值向左
+  optional int32  mouse_y            = 2; // 鼠标Y轴移动速度，负值向下
+  optional int32  mouse_z            = 3; // 鼠标滚轮速度，负值向后滚动
+  optional bool   left_button_down   = 4; // 左键状态 (false=抬起, true=按下)
+  optional bool   right_button_down  = 5; // 右键状态 (false=抬起, true=按下)
+  optional uint32 keyboard_value     = 6; // 键盘按键位掩码 (bit0~bit15)
+  optional bool   mid_button_down    = 7; // 中键状态 (false=抬起, true=按下)
 }
 
-message GlobalUnitStatus { 
- uint32 base_health = 1; 
- uint32 base_status = 2; 
- uint32 base_shield = 3; 
- uint32 outpost_health = 4; 
- uint32 outpost_status = 5; 
- repeated uint32 robot_health = 6; 
- repeated int32 robot_bullets = 7; 
- uint32 total_damage_red = 8; 
- uint32 total_damage_blue = 9; 
+
+message CustomControl {
+  optional bytes data = 1; // 最大30字节的自定义数据
 }
 
-message GlobalLogisticsStatus { 
- uint32 remaining_economy = 1; 
- uint64 total_economy_obtained = 2; 
- uint32 tech_level = 3; 
- uint32 encryption_level = 4; 
+
+
+message GameStatus {
+  optional uint32 current_round      = 1; // 当前局号 (从1开始)
+  optional uint32 total_rounds       = 2; // 总局数
+  optional uint32 red_score          = 3; // 红方得分
+  optional uint32 blue_score         = 4; // 蓝方得分
+  optional uint32 current_stage      = 5; // 当前阶段 (枚举见上方)
+  optional int32  stage_countdown_sec = 6; // 当前阶段剩余时间(秒)
+  optional int32  stage_elapsed_sec  = 7; // 当前阶段已过时间(秒)
+  optional bool   is_paused          = 8; // 是否暂停
 }
 
-message GlobalSpecialMechanism { 
- repeated uint32 mechanism_id = 1; 
- repeated int32 mechanism_time_sec = 2; 
-} 
 
-message Event { 
- int32 event_id = 1; 
- string param = 2; 
+message GlobalUnitStatus {
+  optional uint32 base_health          = 1;  // 己方基地当前血量 (0=已摧毁)
+  optional uint32 base_status          = 2;  // 己方基地状态
+  optional uint32 base_shield          = 3;  // 己方基地当前护盾值 (0=无护盾)
+  optional uint32 outpost_health       = 4;  // 己方前哨站当前血量 (0=已摧毁)
+  optional uint32 outpost_status       = 5;  // 己方前哨站状态
+  optional uint32 enemy_base_health    = 6;  // 对方基地当前血量 (0=已摧毁)
+  optional uint32 enemy_base_status    = 7;  // 对方基地状态
+  optional uint32 enemy_base_shield    = 8;  // 对方基地当前护盾值 (0=无护盾)
+  optional uint32 enemy_outpost_health = 9;  // 对方前哨站当前血量 (0=已摧毁)
+  optional uint32 enemy_outpost_status = 10; // 对方前哨站状态
+  repeated uint32 robot_health         = 11; // 所有机器人血量 (见排列顺序说明)
+  repeated int32  robot_bullets        = 12; // 己方机器人剩余累计发弹量
+  optional uint32 total_damage_ally    = 13; // 己方累计总伤害
+  optional uint32 total_damage_enemy   = 14; // 对方累计总伤害
 }
 
-message RobotInjuryStat { 
- uint32 total_damage = 1; 
- uint32 collision_damage = 2; 
- uint32 small_projectile_damage = 3; 
- uint32 large_projectile_damage = 4; 
- uint32 dart_splash_damage = 5; 
- uint32 module_offline_damage = 6; 
- uint32 wifi_offline_damage = 7; 
- uint32 penalty_damage = 8; 
- uint32 server_kill_damage = 9; 
- uint32 killer_id = 10; 
+
+message GlobalLogisticsStatus {
+  optional uint32 remaining_economy      = 1; // 己方当前经济
+  optional uint64 total_economy_obtained = 2; // 己方累计总经济
+  optional uint32 tech_level             = 3; // 己方科技等级 (工程机器人装配最高难度)
+  optional uint32 encryption_level       = 4; // 己方加密等级 (雷达解析信息波机制)
 }
 
-message RobotRespawnStatus { 
- bool is_pending_respawn = 1; 
- uint32 total_respawn_progress = 2; 
- uint32 current_respawn_progress = 3; 
- bool can_free_respawn = 4; 
- uint32 gold_cost_for_respawn = 5; 
- bool can_pay_for_respawn = 6; 
+
+message GlobalSpecialMechanism {
+  repeated uint32 mechanism_id       = 1; // 正在生效的机制ID列表
+  repeated int32  mechanism_time_sec = 2; // 对应的时间参数(秒)
 }
 
-message RobotStaticStatus { 
- uint32 connection_state = 1; 
- uint32 field_state = 2; 
- uint32 alive_state = 3; 
- uint32 robot_id = 4; 
- uint32 robot_type = 5; 
- uint32 performance_system_shooter = 6; 
- uint32 performance_system_chassis = 7; 
- uint32 level = 8; 
- uint32 max_health = 9; 
- uint32 max_heat = 10; 
- float heat_cooldown_rate = 11; 
- uint32 max_power = 12; 
- uint32 max_buffer_energy = 13; 
- uint32 max_chassis_energy = 14; 
-} 
 
-message RobotDynamicStatus { 
- uint32 current_health = 1; 
- float current_heat = 2; 
- float last_projectile_fire_rate = 3; 
- uint32 current_chassis_energy = 4; 
- uint32 current_buffer_energy = 5; 
- uint32 current_experience = 6; 
- uint32 experience_for_upgrade = 7; 
- uint32 total_projectiles_fired = 8; 
- uint32 remaining_ammo = 9; 
- bool is_out_of_combat = 10; 
- uint32 out_of_combat_countdown = 11; 
- bool can_remote_heal = 12; 
- bool can_remote_ammo = 13; 
+message Event {
+  optional int32  event_id = 1; // 事件编号 (枚举见上方)
+  optional string param    = 2; // 事件参数 (含义随event_id变化)
 }
 
-message RobotModuleStatus { 
- uint32 power_manager = 1; 
- uint32 rfid = 2; 
- uint32 light_strip = 3; 
- uint32 small_shooter = 4; 
- uint32 big_shooter = 5; 
- uint32 uwb = 6; 
- uint32 armor = 7; 
- uint32 video_transmission = 8; 
- uint32 capacitor = 9; 
- uint32 main_controller = 10; 
+
+message RobotInjuryStat {
+  optional uint32 total_damage          = 1;  // 累计受伤总计
+  optional uint32 collision_damage      = 2;  // 撞击伤害
+  optional uint32 small_projectile_damage = 3; // 17mm弹丸伤害
+  optional uint32 large_projectile_damage = 4; // 42mm弹丸伤害
+  optional uint32 dart_splash_damage    = 5;  // 飞镖溅射伤害
+  optional uint32 module_offline_damage = 6;  // 模块离线扣血
+  optional uint32 offline_damage        = 7;  // 异常离线扣血
+  optional uint32 penalty_damage        = 8;  // 判罚扣血
+  optional uint32 server_kill_damage    = 9;  // 服务器强制战亡扣血
+  optional uint32 killer_id             = 10; // 击杀者ID (0=未检测到击杀者)
 }
 
-message RobotPosition { 
- float x = 1; 
- float y = 2; 
- float z = 3; 
- float yaw = 4; 
+
+message RobotRespawnStatus {
+  optional bool   is_pending_respawn       = 1; // 是否处于待复活状态
+  optional uint32 total_respawn_progress   = 2; // 复活所需总读条
+  optional uint32 current_respawn_progress = 3; // 当前复活读条进度
+  optional bool   can_free_respawn         = 4; // 是否可以免费复活
+  optional uint32 gold_cost_for_respawn    = 5; // 花费金币复活所需金币数
+  optional bool   can_pay_for_respawn      = 6; // 是否允许花费金币复活
 }
 
-message Buff { 
- uint32 robot_id = 1; 
- uint32 buff_type = 2; 
- int32 buff_level = 3; 
- uint32 buff_max_time = 4; 
- uint32 buff_left_time = 5; 
- string msg_params = 6; 
+
+message RobotStaticStatus {
+  optional uint32 connection_state           = 1;  // 连接状态
+  optional uint32 field_state                = 2;  // 上场状态
+  optional uint32 alive_state                = 3;  // 存活状态
+  optional uint32 robot_id                   = 4;  // 机器人编号
+  optional uint32 robot_type                 = 5;  // 机器人类型
+  optional uint32 performance_system_shooter = 6;  // 性能体系-发射机构
+  optional uint32 performance_system_chassis = 7;  // 性能体系-底盘
+  optional uint32 level                      = 8;  // 当前等级
+  optional uint32 max_health                 = 9;  // 最大血量
+  optional uint32 max_heat                   = 10; // 最大热量
+  optional float  heat_cooldown_rate         = 11; // 热量冷却速率(每秒)
+  optional uint32 max_power                  = 12; // 最大功率
+  optional uint32 max_buffer_energy          = 13; // 最大缓冲能量
+  optional uint32 max_chassis_energy         = 14; // 最大底盘能量
 }
 
-message PenaltyInfo { 
- uint32 penalty_type = 1; 
- uint32 penalty_effect_sec = 2; 
- uint32 total_penalty_num = 3; 
-} 
 
-message RobotPathPlanInfo { 
- uint32 intention = 1; 
- uint32 start_pos_x = 2; 
- uint32 start_pos_y = 3; 
- repeated int32 offset_x = 4 [packed = true]; 
- repeated int32 offset_y = 5 [packed = true]; 
- uint32 sender_id = 6; 
-} 
-
-message MapClickInfoNotify { 
- uint32 is_send_all = 1; 
- bytes robot_id = 2; 
- uint32 mode = 3; 
- uint32 enemy_id = 4; 
- uint32 ascii = 5; 
- uint32 type = 6; 
- uint32 screen_x = 7; 
- uint32 screen_y = 8; 
- float map_x = 9; 
- float map_y = 10; 
+message RobotDynamicStatus {
+  optional uint32 current_health            = 1;  // 当前血量
+  optional float  current_heat              = 2;  // 当前热量
+  optional float  last_projectile_fire_rate = 3;  // 上一次弹丸射速
+  optional uint32 current_chassis_energy    = 4;  // 当前剩余底盘能量
+  optional uint32 current_buffer_energy     = 5;  // 当前缓冲能量
+  optional uint32 current_experience        = 6;  // 当前经验值
+  optional uint32 experience_for_upgrade    = 7;  // 距下次升级所需经验
+  optional uint32 total_projectiles_fired   = 8;  // 累计已发弹量
+  optional uint32 remaining_ammo            = 9;  // 剩余允许发弹量
+  optional bool   is_out_of_combat          = 10; // 是否处于脱战状态
+  optional uint32 out_of_combat_countdown   = 11; // 脱战状态倒计时
+  optional bool   can_remote_heal           = 12; // 是否可以远程补血
+  optional bool   can_remote_ammo           = 13; // 是否可以远程补弹
 }
 
-message RaderInfoToClient { 
- uint32 target_robot_id = 1; 
- float target_pos_x = 2; 
- float target_pos_y = 3; 
- float torward_angle = 4; 
- uint32 is_high_light = 5; 
+
+message RobotModuleStatus {
+  optional uint32 power_manager          = 1;  // 电源管理模块状态
+  optional uint32 rfid                   = 2;  // RFID模块状态
+  optional uint32 light_strip            = 3;  // 灯条模块状态
+  optional uint32 small_shooter          = 4;  // 17mm发射机构状态
+  optional uint32 big_shooter            = 5;  // 42mm发射机构状态
+  optional uint32 uwb                    = 6;  // 定位模块状态
+  optional uint32 armor                  = 7;  // 装甲模块状态
+  optional uint32 video_transmission     = 8;  // 图传模块状态
+  optional uint32 capacitor              = 9;  // 电容模块状态
+  optional uint32 main_controller        = 10; // 主控状态
+  optional uint32 laser_detection_module = 11; // 激光检测模块状态
 }
 
-message CustomByteBlock { 
- bytes data = 1; 
+
+message RobotPosition {
+  optional float  x        = 1; // 世界坐标X轴
+  optional float  y        = 2; // 世界坐标Y轴
+  optional float  z        = 3; // 世界坐标Z轴
+  optional float  yaw      = 4; // 朝向(度), 正北为0度
+  optional uint32 robot_id = 5; // 坐标归属机器人ID
 }
 
-message AssemblyCommand { 
- uint32 operation = 1; 
- uint32 difficulty = 2; 
+
+message Buff {
+  optional uint32 robot_id      = 1; // 机器人ID
+  optional uint32 buff_type     = 2; // Buff类型
+  optional int32  buff_level    = 3; // Buff增益值
+  optional uint32 buff_max_time = 4; // Buff最大剩余时间
+  optional uint32 buff_left_time = 5; // Buff剩余时间
 }
 
-message TechCoreMotionStateSync { 
- uint32 maximum_difficulty_level = 1; 
- uint32 status = 2; 
+
+message PenaltyInfo {
+  optional uint32 penalty_type       = 1; // 当前受罚类型
+  optional uint32 penalty_effect_sec = 2; // 当前受罚效果时长(秒)
+  optional uint32 total_penalty_num  = 3; // 当前判罚数量
 }
 
-message RobotPerformanceSelectionCommand { 
- uint32 shooter = 1; 
- uint32 chassis = 2; 
+
+message RobotPathPlanInfo {
+  optional uint32 intention   = 1; // 哨兵意图
+  optional uint32 start_pos_x = 2; // 起始点X坐标(分米)
+  optional uint32 start_pos_y = 3; // 起始点Y坐标(分米)
+  repeated int32  offset_x    = 4 [packed = true]; // X增量数组(长度49)
+  repeated int32  offset_y    = 5 [packed = true]; // Y增量数组(长度49)
+  optional uint32 sender_id   = 6; // 发送者ID
 }
 
-message RobotPerformanceSelectionSync { 
- uint32 shooter = 1; 
- uint32 chassis = 2; 
+
+message MapClickInfoNotify {
+  optional uint32 is_send_all = 1; // 发送范围
+  optional bytes  robot_id    = 2; // 目标机器人ID列表(固定7字节)
+  optional uint32 mode        = 3; // 标记类型
+  optional uint32 enemy_id    = 4; // 标定的对方ID
+  optional uint32 ascii       = 5; // 自定义图标ASCII码
+  optional uint32 type        = 6; // 标记模式
+  optional float  map_x       = 7; // 地图坐标X
+  optional float  map_y       = 8; // 地图坐标Y
 }
 
-message HeroDeployModeEventCommand { 
- uint32 mode = 1; 
+
+message RadarSingleRobotInfo {
+  optional uint32 target_pos_x  = 1; // 机器人位置X(cm)
+  optional uint32 target_pos_y  = 2; // 机器人位置Y(cm)
+  optional uint32 is_high_light = 3; // 是否特殊标识
 }
 
-message DeployModeStatusSync { 
- uint32 status = 1; 
+message RadarInfoToClient {
+  repeated RadarSingleRobotInfo robot_info = 1; // 所有机器人位置信息列表
 }
 
-message RuneActivateCommand { 
- uint32 activate = 1; 
+
+message CustomByteBlock {
+  optional bytes data = 1; // 最大2.4kbit(300字节)的自定义数据包
 }
 
-message RuneStatusSync { 
- uint32 rune_status = 1; 
- uint32 activated_arms = 2; 
- uint32 average_rings = 3; 
+
+message AssemblyCommand {
+  optional uint32 operation  = 1; // 装配操作类型
+  optional uint32 difficulty = 2; // 选中的装配难度
 }
 
-message SentinelStatusSync { 
- uint32 posture_id = 1; 
- bool is_weakened = 2; 
+
+message TechCoreMotionStateSync {
+  optional uint32 maximum_difficulty_level = 1; // 当前可选最高装配难度等级
+  optional uint32 basic_state              = 2; // 科技核心基础状态
+  optional uint32 putin_state              = 3; // 能量单元放入状态
+  optional uint32 move_state               = 4; // 能量单元平移状态
+  optional uint32 rotate_state             = 5; // 能量单元旋转状态
+  optional uint32 enemy_core_status        = 6; // 对方科技核心状态
+  optional uint32 remain_time_all          = 7; // 己方装配总剩余时长(仅四级装配时有效)
+  optional uint32 remain_time_step         = 8; // 单步骤装配间隔剩余时长(仅四级装配时有效)
 }
 
-message DartCommand { 
- uint32 target_id = 1; 
- bool open = 2; 
+
+message RobotPerformanceSelectionCommand {
+  optional uint32 shooter        = 1; // 发射机构性能体系
+  optional uint32 chassis        = 2; // 底盘性能体系
+  optional uint32 sentry_control = 3; // 哨兵控制方式选择
 }
 
-message DartSelectTargetStatusSync { 
- uint32 target_id = 1; 
- bool open = 2; 
+
+message RobotPerformanceSelectionSync {
+  optional uint32 shooter        = 1; // 发射机构性能体系
+  optional uint32 chassis        = 2; // 底盘性能体系
+  optional uint32 sentry_control = 3; // 哨兵控制方式选择
 }
 
-message GuardCtrlCommand { 
- uint32 command_id = 1; 
+
+message CommonCommand {
+  optional uint32 cmd_type = 1; // 命令类型
+  optional uint32 param    = 2; // 命令类型对应的参数
 }
 
-message GuardCtrlResult { 
- uint32 command_id = 1; 
- uint32 result_code = 2; 
+
+message HeroDeployModeEventCommand {
+  optional uint32 mode = 1; // 模式
 }
 
-message AirSupportCommand { 
- uint32 command_id = 1; 
+
+message DeployModeStatusSync {
+  optional uint32 status = 1; // 当前部署模式状态
 }
 
-message AirSupportStatusSync { 
- uint32 airsupport_status = 1; 
- uint32 left_time = 2; 
- uint32 cost_coins = 3; 
+
+message RuneActivateCommand {
+  optional uint32 activate = 1; // 激活指令 (1=开启)
+}
+
+
+message RuneStatusSync {
+  optional uint32 rune_status    = 1; // 当前能量机关状态
+  optional uint32 activated_arms = 2; // 当前已激活的灯臂数量
+  optional float  average_rings  = 3; // 平均环数 (仅大能量机关激活中有效)
+}
+
+
+message SentryStatusSync {
+  optional uint32 posture_id  = 1; // 姿态ID
+  optional bool   is_weakened = 2; // 是否弱化
+}
+
+
+message DartCommand {
+  optional uint32 target_id      = 1; // 目标ID
+  optional bool   open           = 2; // 闸门开关
+  optional bool   launch_confirm = 3; // 是否确认发射 (1=确认)
+}
+
+
+message DartSelectTargetStatusSync {
+  optional uint32 target_id = 1; // 目标ID
+  optional uint32 open      = 2; // 闸门状态
+}
+
+
+message SentryCtrlCommand {
+  optional uint32 command_id = 1; // 指令编号
+}
+
+
+message SentryCtrlResult {
+  optional uint32 command_id  = 1; // 对应的指令编号
+  optional uint32 result_code = 2; // 执行结果码 (0=成功)
+}
+
+
+message AirSupportCommand {
+  optional uint32 command_id = 1; // 指令类型
+}
+
+
+message AirSupportStatusSync {
+  optional uint32 airsupport_status  = 1; // 空中支援状态
+  optional uint32 left_time          = 2; // 免费空中支援剩余时间
+  optional uint32 cost_coins         = 3; // 付费空中支援已花费金币
+  optional uint32 is_being_targeted  = 4; // 当前激光检测模块是否被照射
+  optional uint32 shooter_status     = 5; // 空中机器人被反制状态
 }

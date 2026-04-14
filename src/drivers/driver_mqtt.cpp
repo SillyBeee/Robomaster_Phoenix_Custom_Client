@@ -53,7 +53,8 @@ MqttClient::MqttClient(const std::string& ip, int port, const std::string& clien
     this->port_ = port;
     this->client_id_ = client_id;
     // 创建mqtt客户端对象
-    std::string mqtt_addr = "mqtt://" + ip_ + ":" + std::to_string(port_);
+    // std::string mqtt_addr = "mqtt://" + ip_ + ":" + std::to_string(port_);
+    std::string mqtt_addr = "tcp://" + ip_ + ":" + std::to_string(port_);
     this->client_ = std::make_unique<mqtt::async_client>(mqtt_addr, client_id_);
 }
 

@@ -29,6 +29,14 @@ jobs:
           # 使用 sudo 安装依赖
           sudo bash scripts/setup.bash
 
+
+          echo
+          echo 'starting gen protobuf files'
+          echo
+          chmod +x scripts/gen_proto.bash || true
+          # 使用 sudo 安装依赖
+          sudo bash scripts/gen_proto.bash
+
           rm -rf build
           echo
           echo 'old build files removed'
