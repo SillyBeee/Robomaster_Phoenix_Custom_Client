@@ -33,9 +33,8 @@ jobs:
           echo
           echo 'starting gen protobuf files'
           echo
-          chmod +x scripts/gen_proto.bash || true
-          # 使用 sudo 安装依赖
-          sudo bash scripts/gen_proto.bash
+          chmod +x scripts/gen_proto.sh || true
+          sudo bash scripts/gen_proto.sh
 
           rm -rf build
           echo
