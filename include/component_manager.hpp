@@ -29,6 +29,10 @@ public:
     void SetRobotStaticStatus(RobotStaticStatus input);
     void SetRobotDynamicStatus(RobotDynamicStatus input);
     void SetRobotModuleStatus(RobotModuleStatus input);
+    void SetRuneStatus(RuneStatusSync input);
+    void SetSentryStatus(SentryStatusSync input);
+    void SetDartSelectTargetStatus(DartSelectTargetStatusSync input);
+    void SetSentryCtrlResult(SentryCtrlResult input);
 
 private:
     ComponentManager() = default;

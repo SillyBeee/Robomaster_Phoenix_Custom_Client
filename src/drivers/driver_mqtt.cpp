@@ -23,27 +23,30 @@ const std::array<TopicMeta, static_cast<size_t>(InputTopic::COUNT_INPUT_TOPICS)>
     TopicMeta { "Buff", 1 },
     TopicMeta { "PenaltyInfo", 1 },
     TopicMeta { "RobotPathPlanInfo", 1 },
-    TopicMeta { "RaderInfoToClient", 1 },
+    TopicMeta { "RadarInfoToClient", 1 },
     TopicMeta { "CustomByteBlock", 1 },
+    TopicMeta { "MapClickInfoNotify", 1 },
     TopicMeta { "TechCoreMotionStateSync", 1 },
     TopicMeta { "RobotPerformanceSelectionSync", 1 },
     TopicMeta { "DeployModeStatusSync", 1 },
     TopicMeta { "RuneStatusSync", 1 },
-    TopicMeta { "SentinelStatusSync", 1 },
+    TopicMeta { "SentryStatusSync", 1 },
     TopicMeta { "DartSelectTargetStatusSync", 1 },
-    TopicMeta { "GuardCtrlResult", 1 },
+    TopicMeta { "SentryCtrlResult", 1 },
     TopicMeta { "AirSupportStatusSync", 1 },
 };
 
 const std::array<TopicMeta, static_cast<size_t>(OutputTopic::COUNT_OUTPUT_TOPICS)> MqttClient::OUTPUT_TOPIC_META_DICT = {
-    TopicMeta { "RemoteControl", 1 },
+    TopicMeta { "KeyboardMouseControl", 1 },
+    TopicMeta { "CustomControl", 1 },
     TopicMeta { "MapClickInfoNotify", 1 },
     TopicMeta { "AssemblyCommand", 1 },
     TopicMeta { "RobotPerformanceSelectionCommand", 1 },
-    TopicMeta { "HeroDeployModelEventCommand", 1 },
+    TopicMeta { "CommonCommand", 1 },
+    TopicMeta { "HeroDeployModeEventCommand", 1 },
     TopicMeta { "RuneActivateCommand", 1 },
     TopicMeta { "DartCommand", 1 },
-    TopicMeta { "GuardCtrlCommand", 1 },
+    TopicMeta { "SentryCtrlCommand", 1 },
     TopicMeta { "AirSupportCommand", 1 },
 };
 
@@ -376,8 +379,8 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         }
     }
 
-    else if (GetInputTopic(InputTopic::RADER_INFO_TO_CLIENT).name == topic){
-        RaderInfoToClient status;
+    else if (GetInputTopic(InputTopic::RADAR_INFO_TO_CLIENT).name == topic){
+        RadarInfoToClient status;
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
@@ -395,6 +398,17 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             LOG_INFO("CustomByteBlock JSON: {}", json);
         } else {
             LOG_ERROR("Failed to parse CustomByteBlock message");
+        }
+    }
+
+    else if (GetInputTopic(InputTopic::MAP_CLICK_INFO_NOTIFY).name == topic){
+        MapClickInfoNotify status;
+        if (status.ParseFromString(payload)) {
+            std::string json;
+            google::protobuf::util::MessageToJsonString(status, &json);
+            LOG_INFO("MapClickInfoNotify JSON: {}", json);
+        } else {
+            LOG_ERROR("Failed to parse MapClickInfoNotify message");
         }
     }
 
@@ -442,14 +456,14 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         }
     }
 
-    else if (GetInputTopic(InputTopic::SENTINEL_STATUS_SYNC).name == topic){
-        SentinelStatusSync status;
+    else if (GetInputTopic(InputTopic::SENTRY_STATUS_SYNC).name == topic){
+        SentryStatusSync status;
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("SentinelStatusSync JSON: {}", json);
+            LOG_INFO("SentryStatusSync JSON: {}", json);
         } else {
-            LOG_ERROR("Failed to parse SentinelStatusSync message");
+            LOG_ERROR("Failed to parse SentryStatusSync message");
         }
     }
 
@@ -464,14 +478,14 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         }
     }
 
-    else if (GetInputTopic(InputTopic::GUARD_CTRL_RESULT).name == topic){
-        GuardCtrlResult status;
+    else if (GetInputTopic(InputTopic::SENTRY_CTRL_RESULT).name == topic){
+        SentryCtrlResult status;
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("GuardCtrlResult JSON: {}", json);
+            LOG_INFO("SentryCtrlResult JSON: {}", json);
         } else {
-            LOG_ERROR("Failed to parse GuardCtrlResult message");
+            LOG_ERROR("Failed to parse SentryCtrlResult message");
         }
     }
 
@@ -496,4 +510,4 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
 }
 
 
-} // namespace drivers`
+} // namespace drivers

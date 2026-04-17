@@ -105,6 +105,7 @@ export struct RobotModuleStatus_slint{
     video_transmission: int, //图传模块状态 (0=离线, 1=在线)
     capacitor: int, //电容模块状态 (0=离线, 1=在线)
     main_controller: int, //主控状态 (0=离线, 1=在线)
+    laser_detection_module: int, //激光检测模块状态 (0=离线, 1=在线)
 }
 
 
@@ -141,10 +142,10 @@ export struct HeroDeployModeStatusSync_slint{
 export struct RuneStatusSync_slint{
     rune_status: int, //当前能量机关状态枚举 (1:未激活 2:正在激活 3:已激活)
     activated_arms: int, //当前已激活的灯臂数量
-    average_rings: int, //总环数
+    average_rings: float, //平均环数 (仅大能量机关激活中有效)
 }
 
-export struct SentinelStatusSync_slint{
+export struct SentryStatusSync_slint{
     posture_id: int, //姿态 ID (1:进攻姿态 2:防御姿态 3:移动姿态)
     is_weakened: bool, //是否弱化
 }
@@ -154,7 +155,7 @@ export struct DartSelectTargetStatusSync_slint{
     open: bool, //闸门状态
 }
 
-export struct GuardCtrlResult_slint{
+export struct SentryCtrlResult_slint{
     command_id: int, //对应的指令编号
     result_code: int, //执行结果码 (0:成功 其他:失败)
 }
@@ -193,8 +194,8 @@ export struct DartCommand_slint{
     open: bool, //闸门开关
 }
 
-export struct GuardCtrlCommand_slint{
-    command_id: int, //指令编号 (1:补血点补弹 2:补给站实体补弹 3:远程补弹 4:远程回血 5:确认复活 6:确认花费金币复活 7:地图标点 8:切换为进攻姿态 9:切换为防御姿态 10:切换为移动姿态)
+export struct SentryCtrlCommand_slint{
+    command_id: int, //指令编号
 }
 
 export struct AirSupportCommand_slint{

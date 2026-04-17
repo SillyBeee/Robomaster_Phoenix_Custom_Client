@@ -192,8 +192,8 @@ void ComponentManager::SetGlobalUnitStatus(GlobalUnitStatus input) {
         }
         return std::make_shared<slint::VectorModel<int>>(bullets_vec);
     }();
-    status.team_damage = input.total_damage_red();
-    status.enemy_damage = input.total_damage_blue();
+    status.team_damage = input.total_damage_ally();
+    status.enemy_damage = input.total_damage_enemy();
     slint::invoke_from_event_loop([this, status]() {
             factory_ptr_->set_global_unit_status(status);
 
@@ -289,10 +289,47 @@ void ComponentManager::SetRobotModuleStatus(RobotModuleStatus input) {
     status.video_transmission = input.video_transmission();
     status.capacitor = input.capacitor();
     status.main_controller = input.main_controller();
+    status.laser_detection_module = input.laser_detection_module();
     slint::invoke_from_event_loop([this, status]() {
             factory_ptr_->set_robot_module_status(status);
     });
 
 
 
+}
+void ComponentManager::SetRuneStatus(RuneStatusSync input) {
+    RuneStatusSync_slint status;
+    status.rune_status = input.rune_status();
+    status.activated_arms = input.activated_arms();
+    status.average_rings = input.average_rings();
+    slint::invoke_from_event_loop([this, status]() {
+            factory_ptr_->set_rune_status(status);
+    });
+}
+
+void ComponentManager::SetSentryStatus(SentryStatusSync input) {
+    SentryStatusSync_slint status;
+    status.posture_id = input.posture_id();
+    status.is_weakened = input.is_weakened();
+    slint::invoke_from_event_loop([this, status]() {
+            factory_ptr_->set_sentry_status(status);
+    });
+}
+
+void ComponentManager::SetDartSelectTargetStatus(DartSelectTargetStatusSync input) {
+    DartSelectTargetStatusSync_slint status;
+    status.target_id = input.target_id();
+    status.open = input.open();
+    slint::invoke_from_event_loop([this, status]() {
+            factory_ptr_->set_dart_select_target_status(status);
+    });
+}
+
+void ComponentManager::SetSentryCtrlResult(SentryCtrlResult input) {
+    SentryCtrlResult_slint status;
+    status.command_id = input.command_id();
+    status.result_code = input.result_code();
+    slint::invoke_from_event_loop([this, status]() {
+            factory_ptr_->set_sentry_ctrl_result(status);
+    });
 }

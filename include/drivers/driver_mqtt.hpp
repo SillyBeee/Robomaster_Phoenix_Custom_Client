@@ -28,32 +28,35 @@ public:
         ROBOT_POSITION,                   // 机器人空间坐标与朝向 — 1Hz
         BUFF,                             // Buff 效果通知 — 触发后持续发送（1Hz）
         PENALTY_INFO,                     // 判罚信息同步 — 触发式发送
-        ROBOT_PATH_PLAN_INFO,             // 机器人路径/规划信息 — 1Hz
-        RADER_INFO_TO_CLIENT,             // 雷达发送的机器人位置信息 — 1Hz
-        CUSTOM_BYTE_BLOCK,                // 自定义字节块（高频数据） — 50Hz
+        ROBOT_PATH_PLAN_INFO,             // 哨兵轨迹规划信息 — 触发式发送
+        RADAR_INFO_TO_CLIENT,             // 雷达发送的机器人位置信息 — 触发式发送
+        CUSTOM_BYTE_BLOCK,                // 自定义字节块（0x0310对应） — 50Hz
+        MAP_CLICK_INFO_NOTIFY,            // 服务器→客户端地图标记通知 — 触发式发送
         TECH_CORE_MOTION_STATE_SYNC,      // 科技核心运动状态同步 — 1Hz
-        ROBOT_PERFORMANCE_SELECTION_SYNC, // 性能体系状态同步 — 1Hz
-        DEPLOY_MODE_STATUS_SYNC,          // 部署模式状态同步 — 1Hz
-        RUNE_STATUS_SYNC,                 // 能量机关/符文状态同步 — 1Hz
-        SENTINEL_STATUS_SYNC,             // 哨兵状态同步 — 1Hz
+        ROBOT_PERFORMANCE_SELECTION_SYNC, // 步兵/英雄性能体系状态同步 — 1Hz
+        DEPLOY_MODE_STATUS_SYNC,          // 英雄部署模式状态同步 — 1Hz
+        RUNE_STATUS_SYNC,                 // 能量机关状态同步 — 1Hz
+        SENTRY_STATUS_SYNC,               // 哨兵姿态相关信息同步 — 1Hz
         DART_SELECT_TARGET_STATUS_SYNC,   // 飞镖目标选择状态同步 — 1Hz
-        GUARD_CTRL_RESULT,                // 哨兵控制指令结果反馈 — 1Hz
-        AIR_SUPPORT_STATUS_SYNC,          // 空中支援状态同步 — 1Hz
+        SENTRY_CTRL_RESULT,               // 哨兵控制指令结果反馈 — 触发式发送
+        AIR_SUPPORT_STATUS_SYNC,          // 空中支援状态反馈 — 1Hz
         COUNT_INPUT_TOPICS,
     };
 
     enum class OutputTopic : uint8_t
     {
         // output topics enum
-        REMOTE_CONTROL = 0,                  //传输鼠标键盘输入和自定义数据 75hz
-        MAP_CLICK_INFO_NOTIFY,               //云台手地图点击标记 触发式发送
-        ASSEMBLY_COMMAND,                    //工程装配指令 1hz
-        ROBOT_PERFORMANCE_SELECTION_COMMAND, //步兵/英雄选择性能体系 1hz
-        HERO_DEPLOY_MODEL_EVENT_COMMAND,     //英雄部署模式相关指令 1hz
-        RUNE_ACTIVATE_COMMAND,               //能量机关激活指令 1hz
-        DART_COMMAND,                        //飞镖控制指令 1hz
-        GUARD_CTRL_COMMAND,                  //哨兵控制指令 1hz
-        AIR_SUPPORT_COMMAND,                 //空中支援指令 1hz
+        KEYBOARD_MOUSE_CONTROL = 0,          // 传输鼠标键盘输入 75Hz
+        CUSTOM_CONTROL,                      // 最大30字节自定义数据 75Hz
+        MAP_CLICK_INFO_NOTIFY,               // 云台手地图点击标记 触发式发送
+        ASSEMBLY_COMMAND,                    // 工程装配指令 触发式，最高10Hz
+        ROBOT_PERFORMANCE_SELECTION_COMMAND, // 地面机器人选择性能体系或控制方式 触发式，最高10Hz
+        COMMON_COMMAND,                      // 机器人多种常用指令 触发式，最高10Hz
+        HERO_DEPLOY_MODE_EVENT_COMMAND,      // 英雄部署模式相关指令 触发式，最高10Hz
+        RUNE_ACTIVATE_COMMAND,               // 能量机关激活指令 触发式，最高10Hz
+        DART_COMMAND,                        // 飞镖控制指令 触发式，最高10Hz
+        SENTRY_CTRL_COMMAND,                 // 哨兵控制指令请求 触发式，最高10Hz
+        AIR_SUPPORT_COMMAND,                 // 空中支援指令 触发式发送
         COUNT_OUTPUT_TOPICS,
     };
 

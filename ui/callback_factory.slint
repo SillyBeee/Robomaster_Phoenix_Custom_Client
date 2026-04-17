@@ -6,7 +6,11 @@ import {
     RobotStaticStatus_slint,
     GlobalLogisticsStatus_slint,
     RobotRespawnStatus_slint,
-    RobotModuleStatus_slint
+    RobotModuleStatus_slint,
+    RuneStatusSync_slint,
+    SentryStatusSync_slint,
+    DartSelectTargetStatusSync_slint,
+    SentryCtrlResult_slint,
 } from "referee_data_struct.slint";
 
 
@@ -49,6 +53,10 @@ export global Callback_Factory {
     in-out property <RobotStaticStatus-slint> robot_static_status;
     in-out property <RobotDynamicStatus-slint> robot_dynamic_status;
     in-out property <RobotModuleStatus-slint> robot_module_status;
+    in-out property <RuneStatusSync_slint> rune_status;
+    in-out property <SentryStatusSync_slint> sentry_status;
+    in-out property <DartSelectTargetStatusSync_slint> dart_select_target_status;
+    in-out property <SentryCtrlResult_slint> sentry_ctrl_result;
 
     //全局回调
     callback open-url(string);
