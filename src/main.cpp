@@ -11,7 +11,64 @@
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
+#include <atomic>
+#include <cstring>
+#include <mutex>
 #include <thread>
+
+namespace
+{
+slint::Image MatToSlintImage(const cv::Mat& mat)
+{
+    cv::Mat rgb;
+    if (mat.type() == CV_8UC3)
+    {
+        cv::cvtColor(mat, rgb, cv::COLOR_BGR2RGB);
+    }
+    else if (mat.type() == CV_8UC4)
+    {
+        cv::cvtColor(mat, rgb, cv::COLOR_BGRA2RGB);
+    }
+    else if (mat.type() == CV_8UC1)
+    {
+        cv::cvtColor(mat, rgb, cv::COLOR_GRAY2RGB);
+    }
+    else
+    {
+        return slint::Image();
+    }
+
+    const int w = rgb.cols;
+    const int h = rgb.rows;
+    slint::SharedPixelBuffer<slint::Rgb8Pixel> buf(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+    auto dst = buf.begin();
+
+    if (rgb.isContinuous())
+    {
+        const uint8_t* src = rgb.data;
+        const size_t pixels = static_cast<size_t>(w) * static_cast<size_t>(h);
+        for (size_t i = 0; i < pixels; ++i)
+        {
+            dst[i] = slint::Rgb8Pixel { src[i * 3], src[i * 3 + 1], src[i * 3 + 2] };
+        }
+    }
+    else
+    {
+        for (int y = 0; y < h; ++y)
+        {
+            const uint8_t* row = rgb.ptr<uint8_t>(y);
+            for (int x = 0; x < w; ++x)
+            {
+                const size_t i = static_cast<size_t>(y) * static_cast<size_t>(w) + static_cast<size_t>(x);
+                dst[i] = slint::Rgb8Pixel { row[x * 3], row[x * 3 + 1], row[x * 3 + 2] };
+            }
+        }
+    }
+
+    return slint::Image(std::move(buf));
+}
+}
+
 int main()
 {
     //加载参数
@@ -51,14 +108,19 @@ int main()
     // pose_test_slider(callback_factory);
 
     drivers::GamePad gamepad;
-    drivers::MqttClient mqtt_client("127.0.0.1");
-    drivers::SocketImageReceiver socket_receiver("127.0.0.1", 3334, 16 * 1024 * 1024);
+    drivers::MqttClient mqtt_client("192.168.12.1",3333, "3");
+    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1920 * 1080);
 
     gamepad.Init();
     mqtt_client.Connect();
 
     std::atomic_bool stop_flag { false };
-    std::thread socket_thread([&socket_receiver, &stop_flag]
+    auto* callback_factory_ptr = &callback_factory;
+    std::mutex ui_frame_mutex;
+    slint::Image latest_ui_frame;
+    std::atomic_bool ui_update_pending { false };
+
+    std::thread socket_thread([&socket_receiver, &stop_flag, callback_factory_ptr, &ui_frame_mutex, &latest_ui_frame, &ui_update_pending]
                               {
     if (!socket_receiver.Connect()) {
       LOG_ERROR("Failed to initialize SocketImageReceiver");
@@ -78,9 +140,22 @@ int main()
         // 使用 FFmpeg 解码器替代 imdecode
         // cv::Mat img = cv::imdecode(frame, cv::IMREAD_COLOR); 
         if (decoder.decode(frame, img) && !img.empty()) {
-          LOG_INFO("SocketThread displayed image size={}x{}", img.cols, img.rows);
-          cv::imshow("SocketFrame", img);
-          cv::waitKey(1);
+          LOG_DEBUG("SocketThread decoded image size={}x{}", img.cols, img.rows);
+          {
+            std::lock_guard<std::mutex> lock(ui_frame_mutex);
+            latest_ui_frame = MatToSlintImage(img);
+          }
+          if (!ui_update_pending.exchange(true)) {
+            slint::invoke_from_event_loop([callback_factory_ptr, &ui_frame_mutex, &latest_ui_frame, &ui_update_pending]() {
+              slint::Image frame_for_ui;
+              {
+                std::lock_guard<std::mutex> lock(ui_frame_mutex);
+                frame_for_ui = latest_ui_frame;
+              }
+              callback_factory_ptr->set_video_frame(frame_for_ui);
+              ui_update_pending.store(false);
+            });
+          }
         } else {
           LOG_WARN("Decode failed or image empty, bytes={}", frame.size());
         }
@@ -92,7 +167,6 @@ int main()
         }
       }
     }
-    // cv::destroyWindow("SocketFrame");
     LOG_INFO("Socket display thread exiting"); });
 
     main_window->run();

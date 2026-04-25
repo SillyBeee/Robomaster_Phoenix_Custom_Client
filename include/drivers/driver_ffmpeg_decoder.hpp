@@ -1,6 +1,9 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
+#include <arpa/inet.h>
+#include <cstdint>
+#include <cstring>
 #include <vector>
 #include <iostream>
 
@@ -41,9 +44,18 @@ public:
 
     bool decode(const std::vector<uint8_t>& data, cv::Mat& out_img) {
         if (!codec_ctx_ || !parser_) return false;
+        if (data.empty()) return false;
 
-        const uint8_t* cur_ptr = data.data();
-        int cur_size = data.size();
+        const std::vector<uint8_t>* bitstream = &data;
+        converted_buffer_.clear();
+        if (likely_length_prefixed(data)) {
+            if (convert_length_prefixed_to_annexb(data, converted_buffer_)) {
+                bitstream = &converted_buffer_;
+            }
+        }
+
+        const uint8_t* cur_ptr = bitstream->data();
+        int cur_size = static_cast<int>(bitstream->size());
         bool got_picture = false;
 
         // 使用 Parser 解析数据流
@@ -56,6 +68,15 @@ public:
                                      &out_data, &out_size,
                                      cur_ptr, cur_size, 
                                      AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+
+            if (len < 0) {
+                // 解析器出错时不能继续用负偏移推进指针，否则会越界崩溃。
+                return got_picture;
+            }
+            if (len == 0 && out_size == 0) {
+                // 防止异常流导致死循环。
+                break;
+            }
 
             cur_ptr += len;
             cur_size -= len;
@@ -89,6 +110,49 @@ public:
     }
 
 private:
+    static bool has_annexb_start_code(const std::vector<uint8_t>& data) {
+        if (data.size() < 4) return false;
+        for (size_t i = 0; i + 3 < data.size() && i < 64; ++i) {
+            if (data[i] == 0x00 && data[i + 1] == 0x00 &&
+                ((data[i + 2] == 0x01) || (data[i + 2] == 0x00 && data[i + 3] == 0x01))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static bool likely_length_prefixed(const std::vector<uint8_t>& data) {
+        if (data.size() < 6) return false;
+        if (has_annexb_start_code(data)) return false;
+        uint32_t nalu_len = 0;
+        std::memcpy(&nalu_len, data.data(), sizeof(nalu_len));
+        nalu_len = ntohl(nalu_len);
+        return nalu_len > 0 && static_cast<size_t>(nalu_len + 4) <= data.size();
+    }
+
+    static bool convert_length_prefixed_to_annexb(const std::vector<uint8_t>& in, std::vector<uint8_t>& out) {
+        out.clear();
+        out.reserve(in.size() + 64);
+        size_t offset = 0;
+        while (offset + 4 <= in.size()) {
+            uint32_t nalu_len = 0;
+            std::memcpy(&nalu_len, in.data() + offset, sizeof(nalu_len));
+            nalu_len = ntohl(nalu_len);
+            offset += 4;
+            if (nalu_len == 0 || offset + nalu_len > in.size()) {
+                out.clear();
+                return false;
+            }
+            out.push_back(0x00);
+            out.push_back(0x00);
+            out.push_back(0x00);
+            out.push_back(0x01);
+            out.insert(out.end(), in.begin() + static_cast<long>(offset), in.begin() + static_cast<long>(offset + nalu_len));
+            offset += nalu_len;
+        }
+        return !out.empty();
+    }
+
     void convert_to_mat(cv::Mat& out_img) {
         if (!sws_ctx_ || codec_ctx_->width != last_width_ || codec_ctx_->height != last_height_) {
             sws_freeContext(sws_ctx_);
@@ -114,4 +178,5 @@ private:
     SwsContext* sws_ctx_ = nullptr;
     int last_width_ = 0;
     int last_height_ = 0;
+    std::vector<uint8_t> converted_buffer_;
 };
