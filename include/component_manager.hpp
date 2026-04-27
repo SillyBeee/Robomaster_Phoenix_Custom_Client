@@ -7,7 +7,6 @@
 #include <slint_color.h>
 #include <string>
 
-
 class ComponentManager {
 public:
     static ComponentManager& GetInstance();

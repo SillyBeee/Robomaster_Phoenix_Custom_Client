@@ -1,5 +1,5 @@
-import { Callback_Factory, Callback-Factory, Callback-Factory } from "../../callback_factory.slint";
-import { Button, Slider, LineEdit } from "std-widgets.slint";
+import { Callback_Factory } from "../../callback_factory.slint";
+import { Slider, LineEdit } from "std-widgets.slint";
 
 // ==========================================
 // 1. 基础 UI 组件库 (Web 风格)
@@ -44,7 +44,7 @@ component ConfigCard inherits Rectangle {
         Text {
             text: root.title;
             color: #ffffff;
-            font-size: Callback-Factory.font_size*1.4px;
+            font-size: Callback_Factory.font_size*1.4px;
             font-weight: 700;
         }
         
@@ -60,7 +60,7 @@ component ConfigCard inherits Rectangle {
 component InputRow inherits HorizontalLayout {
     in property <string> label;
     in property <string> placeholder;
-    in property <string> value;
+    in-out property <string> value;
     
     height: 32px;
     spacing: 10px;
@@ -70,7 +70,7 @@ component InputRow inherits HorizontalLayout {
         text: root.label;
         color: #a0a5b5;
         font-size: Callback_Factory.font_size*1.3px; 
-        width: 100px; // 固定标签宽度
+        width: 300px; // 固定标签宽度
         vertical-alignment: center;
     }
 
@@ -78,25 +78,16 @@ component InputRow inherits HorizontalLayout {
         background: #1a1c24;
         border-radius: 4px;
         border-width: 1px;
-        // border-color: input_area.has-focus ? #4488ff : #333645;
-        
-        // TextInput {
-        //     id: input_area;
-        //     text: root.value;
-        //     color: white;
-        //     font-size: 13px;
-        //     padding-left: 8px;
-        //     vertical-alignment: center;
-        //     single-line: true;
-        // }
-        
-        // if (input_area.text == "") : Text {
-        //     text: root.placeholder;
-        //     color: #555;
-        //     font-size: 13px;
-        //     x: 8px;
-        //     vertical-alignment: center;
-        // }
+        border-color: #333645;
+
+        input_area := LineEdit {
+            text <=> root.value;
+            placeholder-text: root.placeholder;
+            // color: white;
+            font-size: Callback_Factory.font_size * 1.2px;
+            width: 100%;
+            height: 100%;
+        }
     }
 }
 
@@ -152,6 +143,7 @@ export component Performance_Select_Window inherits Rectangle {
 
     // 状态
     property <int> active_tab: 0; // 0: Network, 1: Robot
+    callback request_close;
 
     // 阻止点击穿透
     TouchArea {}
@@ -222,18 +214,37 @@ export component Performance_Select_Window inherits Rectangle {
                         // MQTT 配置
                         ConfigCard {
                             title: "MQTT 消息总线";
-                            InputRow { label: "Broker IP"; value: "127.0.0.1"; placeholder: "例如 192.168.1.100"; }
-                            InputRow { label: "端口 (Port)"; value: "1883"; placeholder: "默认 1883"; }
-                            InputRow { label: "Topic 前缀"; value: "robot/chassis"; }
-                            InfoRow { label: "连接状态"; value: "已连接"; value_color: #44ffaa; }
-                        }
-
-                        // Socket 配置
-                        ConfigCard {
-                            title: "Socket 实时控制";
-                            InputRow { label: "目标 IP"; value: "192.168.1.120"; }
-                            InputRow { label: "UDP 端口"; value: "8080"; }
-                            InfoRow { label: "延迟 (RTT)"; value: "12 ms"; value_color: #4488ff; }
+                            InputRow { label: "Broker IP"; value <=> Callback_Factory.mqtt_ip; placeholder: "例如 192.168.12.1"; }
+                            InputRow { label: "端口 (Port)"; value <=> Callback_Factory.mqtt_port; placeholder: "例如 3333"; }
+                            InputRow { label: "Client ID"; value <=> Callback_Factory.mqtt_client_id; placeholder: "例如 RM_Client"; }
+                            InfoRow { 
+                                label: "连接状态"; 
+                                value: Callback_Factory.mqtt_connect_result_text; 
+                                value_color: Callback_Factory.mqtt_connected ? #44ffaa : #ff8080;
+                            }
+                            HorizontalLayout {
+                                alignment: end;
+                                Rectangle {
+                                    width: Callback_Factory.font_size*12px; height: Callback_Factory.font_size*3.6px; border-radius: 6px; 
+                                    background: @linear-gradient(90deg, #4488ff 0%, #4466ff 100%);
+                                    HorizontalLayout {
+                                        alignment: center; spacing: 6px;
+                                        Text { text: "⚙"; color: white; font-size: Callback_Factory.font_size*2px; vertical-alignment: center; }
+                                        Text { text: "应用并连接"; color: white; font-size: Callback_Factory.font_size*1.3px; font-weight: 700; vertical-alignment: center; }
+                                    }
+                                    TouchArea {
+                                        clicked => {
+                                            let connected = Callback_Factory.apply_mqtt_config(
+                                                Callback_Factory.mqtt_ip,
+                                                Callback_Factory.mqtt_port,
+                                                Callback_Factory.mqtt_client_id
+                                            );
+                                            Callback_Factory.mqtt_connected = connected;
+                                            Callback_Factory.mqtt_connect_result_text = connected ? "连接成功" : "连接失败";
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -300,27 +311,10 @@ export component Performance_Select_Window inherits Rectangle {
                     // 右侧按钮
                     HorizontalLayout {
                         spacing: 12px;
-
-
-                        // 取消按钮
                         Rectangle {
                             width: Callback_Factory.font_size*8px; height: Callback_Factory.font_size*3.6px; border-radius: 6px; background: #2a2d3d;
-                            Text { text: "取消"; color: white; font-size: Callback_Factory.font_size*1.3px;   }
-                            TouchArea { clicked => { /* 关闭逻辑 */ } }
-                        }
-
-                        // 应用按钮 (高亮)
-                        Rectangle {
-                            width: Callback_Factory.font_size*12px; height: Callback_Factory.font_size*3.6px; border-radius: 6px; 
-                            background: @linear-gradient(90deg, #4488ff 0%, #4466ff 100%);
-                            
-                            HorizontalLayout {
-                                alignment: center; spacing: 6px;
-                                Text { text: "⚙"; color: white; font-size: Callback_Factory.font_size*2px;  vertical-alignment: center; }
-                                Text { text: "应用并连接"; color: white; font-size: Callback_Factory.font_size*1.3px;  font-weight: 700; vertical-alignment: center; }
-                            }
-                            
-                            TouchArea { clicked => { /* 保存逻辑 */ } }
+                            Text { text: "关闭"; color: white; font-size: Callback_Factory.font_size*1.3px; }
+                            TouchArea { clicked => { root.request_close(); } }
                         }
                     }
                 }

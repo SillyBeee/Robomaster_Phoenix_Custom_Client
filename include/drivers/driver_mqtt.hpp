@@ -70,6 +70,7 @@ public:
 
     bool Connect();
     bool Disconnect();
+    void SetConfig(const std::string& ip, int port, const std::string& client_id);
     // void StartProcessing();
     // void StopProcessing();
 

@@ -1,6 +1,6 @@
 #include "utils_cv.hpp"
 
-inline slint::Image mat_to_slint_image(const cv::Mat &mat)
+slint::Image MatToSlintImage(const cv::Mat &mat)
 {
     cv::Mat rgb;
     if (mat.type() == CV_8UC3) {

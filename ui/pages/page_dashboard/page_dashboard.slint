@@ -45,6 +45,10 @@ export component Page_DashBoard inherits Rectangle {
             // 确保覆盖在最上层
             width: 80%;
             height: 80%;
+            request_close => {
+                root.show_performance_window = false;
+                focus_scope.focus();
+            }
         }
     }
 }

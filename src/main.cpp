@@ -13,61 +13,11 @@
 #include <slint_image.h>
 #include <atomic>
 #include <cstring>
+#include <functional>
 #include <mutex>
 #include <thread>
 
-namespace
-{
-slint::Image MatToSlintImage(const cv::Mat& mat)
-{
-    cv::Mat rgb;
-    if (mat.type() == CV_8UC3)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_BGR2RGB);
-    }
-    else if (mat.type() == CV_8UC4)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_BGRA2RGB);
-    }
-    else if (mat.type() == CV_8UC1)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_GRAY2RGB);
-    }
-    else
-    {
-        return slint::Image();
-    }
 
-    const int w = rgb.cols;
-    const int h = rgb.rows;
-    slint::SharedPixelBuffer<slint::Rgb8Pixel> buf(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
-    auto dst = buf.begin();
-
-    if (rgb.isContinuous())
-    {
-        const uint8_t* src = rgb.data;
-        const size_t pixels = static_cast<size_t>(w) * static_cast<size_t>(h);
-        for (size_t i = 0; i < pixels; ++i)
-        {
-            dst[i] = slint::Rgb8Pixel { src[i * 3], src[i * 3 + 1], src[i * 3 + 2] };
-        }
-    }
-    else
-    {
-        for (int y = 0; y < h; ++y)
-        {
-            const uint8_t* row = rgb.ptr<uint8_t>(y);
-            for (int x = 0; x < w; ++x)
-            {
-                const size_t i = static_cast<size_t>(y) * static_cast<size_t>(w) + static_cast<size_t>(x);
-                dst[i] = slint::Rgb8Pixel { row[x * 3], row[x * 3 + 1], row[x * 3 + 2] };
-            }
-        }
-    }
-
-    return slint::Image(std::move(buf));
-}
-}
 
 int main()
 {
@@ -78,6 +28,9 @@ int main()
 
     auto main_window = MainWindow::create();
     auto&& callback_factory = main_window->global<Callback_Factory>();
+    drivers::GamePad gamepad;
+    drivers::MqttClient mqtt_client("192.168.12.1", 3333, "RM_Client");
+    drivers::SocketImageReceiver socket_receiver("192.168.12.1", 3334, 16 * 1024 * 1024);
 
     callback_factory.on_open_url(
         [](slint::SharedString url)
@@ -101,15 +54,16 @@ int main()
                                     { callback_move_window(main_window, dx, dy); });
     callback_factory.on_save_to_json([&callback_factory, &components_path]()
                                      { COMPONENT_MANAGER.SaveComponents(components_path.string()); });
+    callback_factory.on_apply_mqtt_config(std::bind(callback_apply_mqtt_config,
+                                                    std::ref(mqtt_client),
+                                                    std::placeholders::_1,
+                                                    std::placeholders::_2,
+                                                    std::placeholders::_3));
 
     COMPONENT_MANAGER.Init(callback_factory);
     COMPONENT_MANAGER.LoadSettings(config_path.string());
     COMPONENT_MANAGER.LoadComponents(components_path.string());
     // pose_test_slider(callback_factory);
-
-    drivers::GamePad gamepad;
-    drivers::MqttClient mqtt_client("192.168.12.1",3333, "3");
-    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1920 * 1080);
 
     gamepad.Init();
     mqtt_client.Connect();

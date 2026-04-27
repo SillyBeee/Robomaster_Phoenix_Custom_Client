@@ -61,6 +61,15 @@ MqttClient::MqttClient(const std::string& ip, int port, const std::string& clien
     this->client_ = std::make_unique<mqtt::async_client>(mqtt_addr, client_id_);
 }
 
+void MqttClient::SetConfig(const std::string& ip, int port, const std::string& client_id)
+{
+    this->ip_ = ip;
+    this->port_ = port;
+    this->client_id_ = client_id;
+    std::string mqtt_addr = "tcp://" + ip_ + ":" + std::to_string(port_);
+    this->client_ = std::make_unique<mqtt::async_client>(mqtt_addr, client_id_);
+}
+
 bool MqttClient::Connect()
 {
     try
