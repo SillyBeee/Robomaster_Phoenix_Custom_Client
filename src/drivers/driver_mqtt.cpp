@@ -2,6 +2,13 @@
 #include "protocol/protocol.pb.h"
 #include <google/protobuf/util/json_util.h> 
 #include "component_manager.hpp"
+
+
+#ifndef LOG_OUTPUT
+#define LOG_OUTPUT 0
+#endif
+
+
 namespace drivers
 {
 using InputTopic = MqttClient::InputTopic;
@@ -128,6 +135,7 @@ bool MqttClient::Disconnect()
 
 bool MqttClient::Publish(const std::string& topic, const std::string& payload, int qos)
 {
+    const bool enable_log_output = (LOG_OUTPUT == 1);
     try
     {
         if (!client_)
@@ -142,7 +150,10 @@ bool MqttClient::Publish(const std::string& topic, const std::string& payload, i
         {
             tok->wait();
         }
-        LOG_INFO("Published to MQTT topic: {} (qos={})", topic, qos);
+        if (enable_log_output)
+        {
+            LOG_INFO("Published to MQTT topic: {} (qos={})", topic, qos);
+        }
         return true;
     }
     catch (const mqtt::exception& e)
@@ -220,12 +231,16 @@ const MqttClient::TopicMeta& MqttClient::GetOutputTopic(OutputTopic t)
 
 void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
 {
+    const bool enable_log_output = (LOG_OUTPUT == 1);
     if (!msg){return;} 
 
     // 解析消息并调用用户处理函数
     std::string topic = msg->get_topic();
     std::string payload = msg->to_string();
-    LOG_INFO("Received MQTT message on topic: {}", topic);
+    if (enable_log_output)
+    {
+        LOG_INFO("Received MQTT message on topic: {}", topic);
+    }
 
     if(topic == GetInputTopic(InputTopic::GAME_STATUS).name){
         GameStatus status;
@@ -233,7 +248,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetGameStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("GameStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("GameStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse GameStatus message");
         }
@@ -245,7 +260,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetGlobalUnitStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("GlobalUnitStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("GlobalUnitStatus JSON: {}", json); }
             
         } else {
             LOG_ERROR("Failed to parse GlobalUnitStatus message");
@@ -258,7 +273,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetGlobalLogisticsStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("GlobalLogisticsStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("GlobalLogisticsStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse GlobalLogisticsStatus message");
         }
@@ -269,7 +284,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("GlobalSpecialMechanism JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("GlobalSpecialMechanism JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse GlobalSpecialMechanism message");
         }
@@ -280,7 +295,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("Event JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("Event JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse Event message");
         }
@@ -291,7 +306,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotInjuryStat JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotInjuryStat JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotInjuryStat message");
         }
@@ -303,7 +318,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetRobotRespawnStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotRespawnStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotRespawnStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotRespawnStatus message");
         }
@@ -315,7 +330,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetRobotStaticStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotStaticStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotStaticStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotStaticStatus message");
         }
@@ -326,7 +341,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetRobotDynamicStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotDynamicStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotDynamicStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotDynamicStatus message");
         }
@@ -338,7 +353,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetRobotModuleStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotModuleStatus JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotModuleStatus JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotModuleStatus message");
         }
@@ -349,7 +364,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotPosition JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotPosition JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotPosition message");
         }
@@ -360,7 +375,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("Buff JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("Buff JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse Buff message");
         }
@@ -371,7 +386,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("PenaltyInfo JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("PenaltyInfo JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse PenaltyInfo message");
         }
@@ -382,7 +397,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotPathPlanInfo JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotPathPlanInfo JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotPathPlanInfo message");
         }
@@ -393,7 +408,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RadarInfoToClient JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RadarInfoToClient JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RadarInfoToClient message");
         }
@@ -404,7 +419,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("CustomByteBlock JSON: {}", json);
+            // LOG_INFO("CustomByteBlock JSON: {}", json);
         } else {
             LOG_ERROR("Failed to parse CustomByteBlock message");
         }
@@ -415,7 +430,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("MapClickInfoNotify JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("MapClickInfoNotify JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse MapClickInfoNotify message");
         }
@@ -426,7 +441,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("TechCoreMotionStateSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("TechCoreMotionStateSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse TechCoreMotionStateSync message");
         }
@@ -437,7 +452,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RobotPerformanceSelectionSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RobotPerformanceSelectionSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RobotPerformanceSelectionSync message");
         }
@@ -448,7 +463,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("DeployModeStatusSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("DeployModeStatusSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse DeployModeStatusSync message");
         }
@@ -459,7 +474,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("RuneStatusSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("RuneStatusSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse RuneStatusSync message");
         }
@@ -470,7 +485,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("SentryStatusSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("SentryStatusSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse SentryStatusSync message");
         }
@@ -481,7 +496,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("DartSelectTargetStatusSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("DartSelectTargetStatusSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse DartSelectTargetStatusSync message");
         }
@@ -492,7 +507,7 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("SentryCtrlResult JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("SentryCtrlResult JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse SentryCtrlResult message");
         }
@@ -503,17 +518,17 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
         if (status.ParseFromString(payload)) {
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            LOG_INFO("AirSupportStatusSync JSON: {}", json);
+            if (enable_log_output) { LOG_INFO("AirSupportStatusSync JSON: {}", json); }
         } else {
             LOG_ERROR("Failed to parse AirSupportStatusSync message");
         }
     }
 
     else if(topic.empty()){
-        LOG_WARN("Received MQTT message with empty topic");
+        if (enable_log_output) { LOG_WARN("Received MQTT message with empty topic"); }
     }
     else{
-        LOG_WARN("Received MQTT message on unknown topic: {}", topic);
+        if (enable_log_output) { LOG_WARN("Received MQTT message on unknown topic: {}", topic); }
     }
 
 }

@@ -10,6 +10,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#ifndef LOG_OUTPUT
+#define LOG_OUTPUT 0
+#endif
+
 namespace drivers
 {
 namespace
@@ -186,10 +190,14 @@ void SocketImageReceiver::CleanupStaleBuffers()
 
 void SocketImageReceiver::PollLoop()
 {
+    const bool enable_log_output = (LOG_OUTPUT == 1);
     // buffer for UDP read
     const size_t recv_buf_size = 65536;
     std::vector<uint8_t> recv_buf(recv_buf_size);
-    LOG_INFO("SocketImageReceiver::PollLoop started");
+    if (enable_log_output)
+    {
+        LOG_INFO("SocketImageReceiver::PollLoop started");
+    }
 
     while (running_)
     {
@@ -220,12 +228,18 @@ void SocketImageReceiver::PollLoop()
         {
             // header 都没有，丢弃
             ++total_packets_received_;
-            LOG_WARN("SocketImageReceiver::PollLoop received too-small packet: {} bytes", n);
+            if (enable_log_output)
+            {
+                LOG_WARN("SocketImageReceiver::PollLoop received too-small packet: {} bytes", n);
+            }
             continue;
         }
 
         ++total_packets_received_;
-        LOG_DEBUG("SocketImageReceiver::PollLoop packet received {} bytes", n);
+        if (enable_log_output)
+        {
+            LOG_DEBUG("SocketImageReceiver::PollLoop packet received {} bytes", n);
+        }
 
         // 8-byte header:
         //   [0..1] frame sequence (u16, network order)
@@ -235,7 +249,10 @@ void SocketImageReceiver::PollLoop()
         const uint16_t seq = ReadBe16(p);
         const uint16_t frag_idx = ReadBe16(p + 2);
         const uint32_t block_size = ReadBe32(p + 4);
-        LOG_DEBUG("SocketImageReceiver::PollLoop header: seq={} frag_idx={} block_size={}", seq, frag_idx, block_size);
+        if (enable_log_output)
+        {
+            LOG_DEBUG("SocketImageReceiver::PollLoop header: seq={} frag_idx={} block_size={}", seq, frag_idx, block_size);
+        }
 
         // payload
         size_t payload_len = static_cast<size_t>(n) - 8;
@@ -244,7 +261,10 @@ void SocketImageReceiver::PollLoop()
         if (block_size == 0 || block_size > max_frame_size_)
         {
             // 非法大小，丢弃
-            LOG_WARN("SocketImageReceiver::PollLoop invalid block_size={} (max={})", block_size, max_frame_size_);
+            if (enable_log_output)
+            {
+                LOG_WARN("SocketImageReceiver::PollLoop invalid block_size={} (max={})", block_size, max_frame_size_);
+            }
             continue;
         }
 
@@ -265,7 +285,10 @@ void SocketImageReceiver::PollLoop()
                 // block_size 与现有不一致，则丢弃该分片（可能是旧残留）
                 if (fb.total_size != block_size)
                 {
-                    LOG_WARN("SocketImageReceiver::PollLoop fragment block_size mismatch for seq={}, expected={}, got={}", seq, fb.total_size, block_size);
+                    if (enable_log_output)
+                    {
+                        LOG_WARN("SocketImageReceiver::PollLoop fragment block_size mismatch for seq={}, expected={}, got={}", seq, fb.total_size, block_size);
+                    }
                     continue;
                 }
             }
@@ -300,7 +323,10 @@ void SocketImageReceiver::PollLoop()
 
                 if (!contiguous_fragments)
                 {
-                    LOG_WARN("SocketImageReceiver::PollLoop incomplete fragment chain for seq={}, dropping frame", seq);
+                    if (enable_log_output)
+                    {
+                        LOG_WARN("SocketImageReceiver::PollLoop incomplete fragment chain for seq={}, dropping frame", seq);
+                    }
                     buffers_.erase(seq);
                     continue;
                 }
@@ -308,12 +334,18 @@ void SocketImageReceiver::PollLoop()
                 // 若拼接后的大小仍大于 expected，则 trim（避免异常）
                 if (frame.size() > fb.total_size)
                 {
-                    LOG_WARN("SocketImageReceiver::PollLoop frame oversize for seq={}, assembled={}, expected={}, trim applied", seq, frame.size(), fb.total_size);
+                    if (enable_log_output)
+                    {
+                        LOG_WARN("SocketImageReceiver::PollLoop frame oversize for seq={}, assembled={}, expected={}, trim applied", seq, frame.size(), fb.total_size);
+                    }
                     frame.resize(fb.total_size);
                 }
                 else if (frame.size() < fb.total_size)
                 {
-                    LOG_WARN("SocketImageReceiver::PollLoop frame undersize for seq={}, assembled={}, expected={}, dropping", seq, frame.size(), fb.total_size);
+                    if (enable_log_output)
+                    {
+                        LOG_WARN("SocketImageReceiver::PollLoop frame undersize for seq={}, assembled={}, expected={}, dropping", seq, frame.size(), fb.total_size);
+                    }
                     buffers_.erase(seq);
                     continue;
                 }
@@ -324,7 +356,10 @@ void SocketImageReceiver::PollLoop()
                     ready_frames_.emplace_back(std::move(frame));
                     ++total_frames_completed_;
                     last_seq_ = seq;
-                    LOG_INFO("SocketImageReceiver::PollLoop completed frame seq={} size={}", seq, fb.total_size);
+                    if (enable_log_output)
+                    {
+                        LOG_INFO("SocketImageReceiver::PollLoop completed frame seq={} size={}", seq, fb.total_size);
+                    }
                 }
                 ready_cv_.notify_one();
 
@@ -343,7 +378,10 @@ void SocketImageReceiver::PollLoop()
         std::lock_guard<std::mutex> lk(ready_mutex_);
         ready_frames_.clear();
     }
-    LOG_INFO("SocketImageReceiver::PollLoop exited");
+    if (enable_log_output)
+    {
+        LOG_INFO("SocketImageReceiver::PollLoop exited");
+    }
 }
 
 } // namespace drivers

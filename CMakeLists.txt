@@ -26,24 +26,30 @@ pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)
 pkg_check_modules(AVUTIL REQUIRED libavutil)
 pkg_check_modules(SWSCALE REQUIRED libswscale)
+pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0>=1.0 gstreamer-app-1.0>=1.0 gstreamer-video-1.0>=1.0)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/protocol)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/raw300_decoder)
 include_directories(
     ${AVCODEC_INCLUDE_DIRS}
     ${AVFORMAT_INCLUDE_DIRS}
     ${AVUTIL_INCLUDE_DIRS}
     ${SWSCALE_INCLUDE_DIRS}
+    ${GSTREAMER_INCLUDE_DIRS}
+    ${GSTREAMER_CFLAGS_OTHER}
+    ${GSTREAMER_LIBRARY_DIRS}
 )
 
 file(GLOB SOURCES 
 "src/*.cpp" 
 "src/drivers/*.cpp" 
 "src/utils/*.cpp" 
-"src/protocol/*.cc")
+"src/protocol/*.cc"
+"src/raw300_decoder/*.cpp")
 
 
 add_executable(RM_Client src/main.cpp ${SOURCES})
@@ -62,6 +68,7 @@ ${AVFORMAT_LIBRARIES}
 ${AVUTIL_LIBRARIES}
 ${SWSCALE_LIBRARIES}
  fmt::fmt
+ ${GSTREAMER_LIBRARIES}
 )
 
 

@@ -29,8 +29,8 @@ int main()
     auto main_window = MainWindow::create();
     auto&& callback_factory = main_window->global<Callback_Factory>();
     drivers::GamePad gamepad;
-    drivers::MqttClient mqtt_client("192.168.12.1", 3333, "RM_Client");
-    drivers::SocketImageReceiver socket_receiver("192.168.12.1", 3334, 16 * 1024 * 1024);
+    drivers::MqttClient mqtt_client("192.168.12.1", 3333, "3");
+    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1024 * 1024);
 
     callback_factory.on_open_url(
         [](slint::SharedString url)
