@@ -12,10 +12,16 @@
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
+#include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstring>
+#include <fstream>
 #include <functional>
+#include <iomanip>
+#include <limits>
 #include <mutex>
+#include <sstream>
 #include <thread>
 
 
@@ -68,6 +74,28 @@ int main()
 
     const std::filesystem::path mqtt_image_dir = source_path / "image";
     std::filesystem::create_directories(mqtt_image_dir);
+    const std::filesystem::path mqtt_packet_dump_path = mqtt_image_dir / "mqtt_packets_300b.txt";
+    const std::filesystem::path mqtt_non_zero_stats_path = mqtt_image_dir / "mqtt_non_zero_stats.txt";
+    auto mqtt_packet_dump_file = std::make_shared<std::ofstream>(mqtt_packet_dump_path, std::ios::out | std::ios::trunc);
+    auto mqtt_non_zero_stats_file = std::make_shared<std::ofstream>(mqtt_non_zero_stats_path, std::ios::out | std::ios::trunc);
+    auto mqtt_packet_dump_mutex = std::make_shared<std::mutex>();
+    auto mqtt_non_zero_stats_mutex = std::make_shared<std::mutex>();
+    if (!mqtt_packet_dump_file->is_open())
+    {
+        LOG_ERROR("Failed to open mqtt packet dump file: {}", mqtt_packet_dump_path.string());
+    }
+    else
+    {
+        LOG_INFO("MQTT packet dump enabled: {}", mqtt_packet_dump_path.string());
+    }
+    if (!mqtt_non_zero_stats_file->is_open())
+    {
+        LOG_ERROR("Failed to open mqtt non-zero stats file: {}", mqtt_non_zero_stats_path.string());
+    }
+    else
+    {
+        LOG_INFO("MQTT non-zero stats file enabled: {}", mqtt_non_zero_stats_path.string());
+    }
     auto raw300_decoder = std::make_shared<hrvtx::standalone::MatDecoder>();
     auto mqtt_saved_frame_count = std::make_shared<std::atomic_uint64_t>(0);
     std::string decoder_err;
@@ -78,9 +106,69 @@ int main()
     else
     {
         mqtt_client.SetCustomByteBlockHandler(
-            [raw300_decoder, mqtt_image_dir, mqtt_saved_frame_count](const std::vector<uint8_t>& packet_data)
+            [raw300_decoder, mqtt_image_dir, mqtt_saved_frame_count, mqtt_packet_dump_file, mqtt_packet_dump_mutex, mqtt_non_zero_stats_file, mqtt_non_zero_stats_mutex](const std::vector<uint8_t>& packet_data)
             {   
-                LOG_INFO("Decoding CustomByteBlock size={} bytes", packet_data.size());
+                const size_t non_zero_bytes = static_cast<size_t>(
+                    std::count_if(packet_data.begin(), packet_data.end(), [](uint8_t b) { return b != 0; }));
+                using Clock = std::chrono::steady_clock;
+                static auto stats_window_begin = Clock::now();
+                static uint64_t stats_window_packets = 0;
+                static uint64_t stats_window_non_zero_bytes = 0;
+                static size_t stats_window_min_non_zero = std::numeric_limits<size_t>::max();
+                static size_t stats_window_max_non_zero = 0;
+                ++stats_window_packets;
+                stats_window_non_zero_bytes += non_zero_bytes;
+                stats_window_min_non_zero = std::min(stats_window_min_non_zero, non_zero_bytes);
+                stats_window_max_non_zero = std::max(stats_window_max_non_zero, non_zero_bytes);
+                const auto stats_now = Clock::now();
+                if (stats_now - stats_window_begin >= std::chrono::seconds(1))
+                {
+                    const double avg_non_zero =
+                        (stats_window_packets > 0)
+                            ? static_cast<double>(stats_window_non_zero_bytes) / static_cast<double>(stats_window_packets)
+                            : 0.0;
+                    if (mqtt_non_zero_stats_file && mqtt_non_zero_stats_file->is_open())
+                    {
+                        std::lock_guard<std::mutex> lock(*mqtt_non_zero_stats_mutex);
+                        (*mqtt_non_zero_stats_file)
+                            << "pkts=" << stats_window_packets
+                            << ", avg_non_zero_bytes=" << std::fixed << std::setprecision(1) << avg_non_zero
+                            << ", min=" << stats_window_min_non_zero
+                            << ", max=" << stats_window_max_non_zero << '\n';
+                        mqtt_non_zero_stats_file->flush();
+                    }
+                    stats_window_begin = stats_now;
+                    stats_window_packets = 0;
+                    stats_window_non_zero_bytes = 0;
+                    stats_window_min_non_zero = std::numeric_limits<size_t>::max();
+                    stats_window_max_non_zero = 0;
+                }
+
+                if (mqtt_packet_dump_file && mqtt_packet_dump_file->is_open())
+                {
+                    std::ostringstream line;
+                    line << std::hex << std::setfill('0');
+                    for (size_t i = 0; i < packet_data.size(); ++i)
+                    {
+                        if (i > 0)
+                        {
+                            line << ' ';
+                        }
+                        line << std::setw(2) << static_cast<unsigned int>(packet_data[i]);
+                    }
+                    std::lock_guard<std::mutex> lock(*mqtt_packet_dump_mutex);
+                    (*mqtt_packet_dump_file) << line.str() << '\n';
+                    mqtt_packet_dump_file->flush();
+                }
+
+                const bool is_compat_inner_frame =
+                    (packet_data.size() == 300 &&
+                     packet_data.size() >= 4 &&
+                     packet_data.front() == static_cast<uint8_t>('s') &&
+                     packet_data.back() == static_cast<uint8_t>('e'));
+                const char* packet_format = is_compat_inner_frame ? "compat_inner_frame" : "raw";
+                LOG_INFO("Decoding CustomByteBlock size={} bytes, packet_format={}",
+                         packet_data.size(), packet_format);
                 auto out = raw300_decoder->decode_packet(packet_data);
                 if (out.packet_dropped)
                 {
