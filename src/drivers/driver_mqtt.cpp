@@ -2,6 +2,7 @@
 #include "protocol/protocol.pb.h"
 #include <google/protobuf/util/json_util.h> 
 #include "component_manager.hpp"
+#include <chrono>
 
 
 #ifndef LOG_OUTPUT
@@ -209,6 +210,12 @@ bool MqttClient::Subscribe(InputTopic topic, int qos)
     return Subscribe(info.name, effective_qos);
 }
 
+void MqttClient::SetCustomByteBlockHandler(std::function<void(const std::vector<uint8_t>&)> handler)
+{
+    std::lock_guard<std::mutex> lock(handler_mutex_);
+    custom_byte_block_handler_ = std::move(handler);
+}
+
 void MqttClient::InitSubscriber()
 {
     // 订阅所有输入主题
@@ -248,7 +255,8 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
             COMPONENT_MANAGER.SetGameStatus(status);
             std::string json;
             google::protobuf::util::MessageToJsonString(status, &json);
-            if (enable_log_output) { LOG_INFO("GameStatus JSON: {}", json); }
+            // if (enable_log_output) { LOG_INFO("GameStatus JSON: {}", json); }
+            LOG_INFO("MQTT received GameStatus JSON: {}", json);
         } else {
             LOG_ERROR("Failed to parse GameStatus message");
         }
@@ -417,9 +425,32 @@ void MqttClient::MessageCallback(mqtt::const_message_ptr msg)
     else if (GetInputTopic(InputTopic::CUSTOM_BYTE_BLOCK).name == topic){
         CustomByteBlock status;
         if (status.ParseFromString(payload)) {
-            std::string json;
-            google::protobuf::util::MessageToJsonString(status, &json);
-            // LOG_INFO("CustomByteBlock JSON: {}", json);
+            std::vector<uint8_t> packet_data(status.data().begin(), status.data().end());
+            using Clock = std::chrono::steady_clock;
+            static auto window_begin = Clock::now();
+            static uint64_t window_packets = 0;
+            static uint64_t window_bytes = 0;
+            static uint64_t total_packets = 0;
+            ++window_packets;
+            window_bytes += packet_data.size();
+            ++total_packets;
+
+            const auto now = Clock::now();
+            if (now - window_begin >= std::chrono::seconds(1)) {
+                LOG_INFO("MQTT CustomByteBlock rx={} pkts/s, {} bytes/s, total={}",
+                         window_packets, window_bytes, total_packets);
+                window_begin = now;
+                window_packets = 0;
+                window_bytes = 0;
+            }
+            std::function<void(const std::vector<uint8_t>&)> handler;
+            {
+                std::lock_guard<std::mutex> lock(handler_mutex_);
+                handler = custom_byte_block_handler_;
+            }
+            if (handler) {
+                handler(packet_data);
+            }
         } else {
             LOG_ERROR("Failed to parse CustomByteBlock message");
         }

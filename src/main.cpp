@@ -4,6 +4,7 @@
 #include "driver_gamepad.hpp"
 #include "driver_mqtt.hpp"
 #include "driver_socket.hpp"
+#include "raw300_decoder/mat_decoder.hpp"
 #include "filesystem"
 #include "logger.hpp"
 #include "slint.h"
@@ -65,6 +66,45 @@ int main()
     COMPONENT_MANAGER.LoadComponents(components_path.string());
     // pose_test_slider(callback_factory);
 
+    const std::filesystem::path mqtt_image_dir = source_path / "image";
+    std::filesystem::create_directories(mqtt_image_dir);
+    auto raw300_decoder = std::make_shared<hrvtx::standalone::MatDecoder>();
+    auto mqtt_saved_frame_count = std::make_shared<std::atomic_uint64_t>(0);
+    std::string decoder_err;
+    if (!raw300_decoder->start(decoder_err))
+    {
+        LOG_ERROR("Failed to start raw300 decoder: {}", decoder_err);
+    }
+    else
+    {
+        mqtt_client.SetCustomByteBlockHandler(
+            [raw300_decoder, mqtt_image_dir, mqtt_saved_frame_count](const std::vector<uint8_t>& packet_data)
+            {   
+                LOG_INFO("Decoding CustomByteBlock size={} bytes", packet_data.size());
+                auto out = raw300_decoder->decode_packet(packet_data);
+                if (out.packet_dropped)
+                {
+                    LOG_WARN("Drop raw300 packet: {}", out.message);
+                    return;
+                }
+                for (const auto& frame : out.frames_bgr)
+                {
+                    if (frame.empty())
+                    {
+                        continue;
+                    }
+                    const uint64_t frame_id = mqtt_saved_frame_count->fetch_add(1) + 1;
+                    const std::filesystem::path image_path =
+                        mqtt_image_dir / ("mqtt_frame_" + std::to_string(frame_id) + ".jpg");
+                    if (!cv::imwrite(image_path.string(), frame))
+                    {
+                        LOG_WARN("Failed to save mqtt decoded frame: {}", image_path.string());
+                    }
+                }
+            }
+        );
+    }
+
     gamepad.Init();
     mqtt_client.Connect();
 
@@ -111,7 +151,7 @@ int main()
             });
           }
         } else {
-          LOG_WARN("Decode failed or image empty, bytes={}", frame.size());
+        //   LOG_WARN("Decode failed or image empty, bytes={}", frame.size());
         }
       } else {
         // 超时或 receiver 已停止
@@ -131,6 +171,7 @@ int main()
     {
         socket_thread.join();
     }
+
     // if(mqtt_thread.joinable()) mqtt_thread.join();
     LOG_INFO("Application exiting");
     return 0;
