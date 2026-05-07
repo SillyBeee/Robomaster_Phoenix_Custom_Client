@@ -252,6 +252,40 @@ export component Performance_Select_Window inherits Rectangle {
                     if (root.active_tab == 1) : VerticalLayout {
                         spacing: 20px;
 
+                        // 视频源切换
+                        ConfigCard {
+                            title: "视频源 (Video Source)";
+                            HorizontalLayout {
+                                spacing: 12px;
+                                alignment: start;
+
+                                Rectangle {
+                                    width: 44px; height: 24px; border-radius: 12px;
+                                    background: Callback_Factory.video_source_name == "Socket" ? #4488ff : #666;
+                                    animate background { duration: 150ms; }
+
+                                    Rectangle {
+                                        width: 20px; height: 20px; border-radius: 10px;
+                                        background: #fff;
+                                        x: Callback_Factory.video_source_name == "Socket" ? 2px : 22px;
+                                        y: 2px;
+                                        animate x { duration: 150ms; }
+                                    }
+
+                                    TouchArea {
+                                        clicked => { Callback_Factory.toggle_video_source(); }
+                                    }
+                                }
+
+                                Text {
+                                    text: Callback_Factory.video_source_name;
+                                    color: #fff;
+                                    font-size: Callback_Factory.font_size*1.4px;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
                         // 性能参数
                         ConfigCard {
                             title: "运动性能 (Performance)";

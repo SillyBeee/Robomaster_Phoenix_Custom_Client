@@ -10,13 +10,10 @@ VideoPipeline::~VideoPipeline() {
     Stop();
 }
 
-void VideoPipeline::Start(drivers::SocketImageReceiver& receiver) {
+void VideoPipeline::Start(VideoSource& source) {
     if (thread_.joinable()) return;
-
-    // Scheduler integration: instead of spawning a raw thread,
-    // enqueue DecodeLoop via scheduler_->Enqueue(...).
     stop_ = false;
-    thread_ = std::thread(&VideoPipeline::DecodeLoop, this, &receiver);
+    thread_ = std::thread(&VideoPipeline::DecodeLoop, this, &source);
 }
 
 void VideoPipeline::Stop() {
@@ -25,47 +22,40 @@ void VideoPipeline::Stop() {
     thread_.join();
 }
 
-void VideoPipeline::DecodeLoop(drivers::SocketImageReceiver* receiver) {
-    if (!receiver->Connect()) {
-        LOG_ERROR("Failed to initialize SocketImageReceiver");
+void VideoPipeline::SwitchSource(VideoSource& new_source) {
+    if (thread_.joinable()) {
+        stop_ = true;
+        thread_.join();
+        stop_ = false;
+        thread_ = std::thread(&VideoPipeline::DecodeLoop, this, &new_source);
+    }
+}
+
+void VideoPipeline::DecodeLoop(VideoSource* source) {
+    if (!source->Open()) {
+        LOG_ERROR("Failed to open video source: {}", source->Name());
         return;
     }
 
-    auto decoder = std::make_unique<HevcDecoder>();
-    drivers::SocketImageReceiver::Frame frame;
-    int empty_count = 0;
-    int decode_fail_count = 0;
     cv::Size last_good_size(1280, 720);
-    constexpr int kClearUiNoFrameChecks = 2;
-    constexpr int kDecoderResetFailThreshold = 30;
+    int empty_count = 0;
 
     while (!stop_) {
-        if (receiver->GetFrameBlocking(frame, 500)) {
+        cv::Mat frame;
+        if (source->ReadFrame(frame, 500)) {
             empty_count = 0;
-
-            cv::Mat img;
-            if (decoder->decode(frame, img) && !img.empty()) {
-                decode_fail_count = 0;
-                last_good_size = img.size();
-                PostUiFrame(img);
-            } else {
-                ++decode_fail_count;
-                if (decode_fail_count >= kDecoderResetFailThreshold) {
-                    LOG_WARN("Decode failed {} times, resetting HEVC decoder", decode_fail_count);
-                    decoder = std::make_unique<HevcDecoder>();
-                    decode_fail_count = 0;
-                    cv::Mat blank(last_good_size.height, last_good_size.width, CV_8UC3, cv::Scalar(0, 0, 0));
-                    PostUiFrame(blank);
-                }
-            }
+            last_good_size = frame.size();
+            PostUiFrame(frame);
         } else {
             ++empty_count;
-            if (empty_count >= kClearUiNoFrameChecks) {
+            if (empty_count >= 2) {
                 cv::Mat blank(last_good_size.height, last_good_size.width, CV_8UC3, cv::Scalar(0, 0, 0));
                 PostUiFrame(blank);
             }
         }
     }
+
+    source->Close();
     LOG_INFO("Video pipeline thread exiting");
 }
 
@@ -85,9 +75,4 @@ void VideoPipeline::PostUiFrame(const cv::Mat& mat) {
             ui_update_pending_.store(false);
         });
     }
-}
-
-void VideoPipeline::ClearUi() {
-    cv::Mat blank(720, 1280, CV_8UC3, cv::Scalar(0, 0, 0));
-    PostUiFrame(blank);
 }

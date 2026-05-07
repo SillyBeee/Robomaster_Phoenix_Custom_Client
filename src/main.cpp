@@ -6,6 +6,7 @@
 #include "raw300_decoder/vtx_mqtt_stream_processor.hpp"
 #include "utils_json_refactor.hpp"
 #include "video_pipeline.hpp"
+#include "video_source.hpp"
 #include "logger.hpp"
 #include <app-window.h>
 #include <filesystem>
@@ -61,8 +62,26 @@ int main() {
     gamepad.Init();
     mqtt_client.Connect();
 
+    auto socket_source = std::make_shared<SocketVideoSource>(socket_receiver);
+    std::shared_ptr<VideoSource> vtx_source;
+    if (vtx)
+        vtx_source = std::make_shared<VtxVideoSource>(*vtx);
+
     VideoPipeline video_pipeline(callback_factory);
-    video_pipeline.Start(socket_receiver);
+    video_pipeline.Start(*socket_source);
+
+    // Video source toggle
+    std::shared_ptr<VideoSource> active_source = socket_source;
+    callback_factory.on_toggle_video_source([&]() {
+        if (active_source.get() == socket_source.get() && vtx_source) {
+            active_source = vtx_source;
+        } else {
+            active_source = socket_source;
+        }
+        video_pipeline.SwitchSource(*active_source);
+        callback_factory.set_video_source_name(slint::SharedString(active_source->Name()));
+        LOG_INFO("Switched video source to: {}", active_source->Name());
+    });
 
     // Scheduler integration:
     //   scheduler.Start(sched_config);

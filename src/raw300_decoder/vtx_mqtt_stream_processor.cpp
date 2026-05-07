@@ -246,6 +246,11 @@ void VtxMqttStreamProcessor::stop()
     decode_bench_file_.close();
 }
 
+void VtxMqttStreamProcessor::SetFrameCallback(std::function<void(cv::Mat)> cb)
+{
+    frame_callback_ = std::move(cb);
+}
+
 void VtxMqttStreamProcessor::OnPacket(const std::vector<uint8_t> &packet_data)
 {
     if (!running_.load())
@@ -531,6 +536,9 @@ void VtxMqttStreamProcessor::OnPacket(const std::vector<uint8_t> &packet_data)
         TimedFrame item;
         item.frame_bgr = frame.clone();
         item.timestamp = std::chrono::steady_clock::now();
+        if (frame_callback_) {
+            frame_callback_(item.frame_bgr);
+        }
         std::lock_guard<std::mutex> lock(video_queue_mutex_);
         if (video_queue_.size() >= kMaxQueuedVideoFrames)
         {

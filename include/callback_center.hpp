@@ -24,10 +24,13 @@ void callback_close_window(slint::ComponentHandle<MainWindow>& window);
 
 void callback_move_window(slint::ComponentHandle<MainWindow>& window, float dx, float dy);
 
+void callback_switch_video_source(slint::ComponentHandle<MainWindow>& window, int source_index);
+
 bool callback_apply_mqtt_config(drivers::MqttClient& mqtt_client,
                                 slint::SharedString ip,
                                 slint::SharedString port,
                                 slint::SharedString client_id);
+
 
 void RegisterCallbacks(const Callback_Factory& factory,
                        slint::ComponentHandle<MainWindow> window,

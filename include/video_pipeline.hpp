@@ -1,32 +1,24 @@
 #pragma once
 
-#include "driver_ffmpeg_decoder.hpp"
-#include "driver_socket.hpp"
+#include "video_source.hpp"
 #include <app-window.h>
 #include <atomic>
-#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
-
-// Scheduler integration:
-//   #include "scheduler_center/scheduler_base.h"
-//   void SetScheduler(SchedulerBase* scheduler);
 
 class VideoPipeline {
 public:
     explicit VideoPipeline(const Callback_Factory& factory);
     ~VideoPipeline();
 
-    void Start(drivers::SocketImageReceiver& receiver);
+    void Start(VideoSource& source);
     void Stop();
 
-    // Scheduler integration point:
-    // Call before Start() to run the decode loop as a scheduled task.
-    // void SetScheduler(SchedulerBase* scheduler);
+    void SwitchSource(VideoSource& new_source);
 
 private:
-    void DecodeLoop(drivers::SocketImageReceiver* receiver);
+    void DecodeLoop(VideoSource* source);
     void PostUiFrame(const cv::Mat& mat);
     void ClearUi();
 

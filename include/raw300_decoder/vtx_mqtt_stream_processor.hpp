@@ -7,6 +7,7 @@
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -32,6 +33,7 @@ class VtxMqttStreamProcessor
     bool start(std::string &err);
     void stop();
     void OnPacket(const std::vector<uint8_t> &packet_data);
+    void SetFrameCallback(std::function<void(cv::Mat)> cb);
 
     enum class SeqFormat : std::uint8_t
     {
@@ -136,6 +138,8 @@ class VtxMqttStreamProcessor
     std::condition_variable video_queue_cv_;
     std::atomic_bool video_writer_stop_{false};
     std::atomic_uint64_t video_drop_count_{0};
+
+    std::function<void(cv::Mat)> frame_callback_;
 };
 
 } // namespace hrvtx::standalone
