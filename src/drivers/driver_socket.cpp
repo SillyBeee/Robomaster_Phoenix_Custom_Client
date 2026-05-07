@@ -16,8 +16,8 @@
 
 namespace drivers
 {
-namespace
-{
+
+
 uint16_t ReadBe16(const uint8_t* data)
 {
     uint16_t net_value = 0;
@@ -31,23 +31,8 @@ uint32_t ReadBe32(const uint8_t* data)
     std::memcpy(&net_value, data, sizeof(net_value));
     return ntohl(net_value);
 }
-} // namespace
-namespace
-{
-uint16_t ReadBe16(const uint8_t* data)
-{
-    uint16_t net_value = 0;
-    std::memcpy(&net_value, data, sizeof(net_value));
-    return ntohs(net_value);
-}
 
-uint32_t ReadBe32(const uint8_t* data)
-{
-    uint32_t net_value = 0;
-    std::memcpy(&net_value, data, sizeof(net_value));
-    return ntohl(net_value);
-}
-} // namespace
+
 
 SocketImageReceiver::SocketImageReceiver(const std::string& ip, uint16_t port, size_t max_frame_size): port_(port),
                                                                                                        max_frame_size_(max_frame_size),
