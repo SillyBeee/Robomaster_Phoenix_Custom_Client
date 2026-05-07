@@ -45,6 +45,60 @@ struct ComponentsConfig
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ComponentsConfig, components)
 };
 
+// JSON serialization for std::pair<int,int>
+namespace nlohmann {
+template<>
+struct adl_serializer<std::pair<int, int>> {
+    static void to_json(json& j, const std::pair<int, int>& p) {
+        j = json::array({p.first, p.second});
+    }
+    static void from_json(const json& j, std::pair<int, int>& p) {
+        j.at(0).get_to(p.first);
+        j.at(1).get_to(p.second);
+    }
+};
+}
+
+// 调度器配置结构
+struct SchedulerCenterConfig
+{
+    enum class Type
+    {
+        CLASSIC,
+        CHOREOGRAPHY
+    };
+
+    Type type{Type::CLASSIC};
+    int thread_num{1};
+
+    // Choreography模式特有配置
+    struct ChoreographyConfig
+    {
+        int choreo_thread_num;   // 绑定到特定处理器的线程数
+        int pool_thread_num; // 公共池线程数
+        std::vector<std::vector<int>> thread_affinities;    // 绑核亲和度
+        std::vector<std::pair<int, int>> thread_policies; // 第一个是策略，第二个是优先级
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(ChoreographyConfig, choreo_thread_num, pool_thread_num, thread_affinities, thread_policies)
+    };
+
+    ChoreographyConfig choreography;
+
+    void reset(){
+        type = Type::CLASSIC;
+        thread_num = 1;
+    }
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(SchedulerCenterConfig, type, thread_num, choreography)
+};
+
+NLOHMANN_JSON_SERIALIZE_ENUM(SchedulerCenterConfig::Type, {
+    { SchedulerCenterConfig::Type::CLASSIC, "CLASSIC" },
+    { SchedulerCenterConfig::Type::CHOREOGRAPHY, "CHOREOGRAPHY" },
+})
+
+
+
 template<typename TConfig>
 class JsonUtils
 {

@@ -34,6 +34,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/drivers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/utils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/protocol)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/raw300_decoder)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/scheduler_center)
 include_directories(
     ${AVCODEC_INCLUDE_DIRS}
     ${AVFORMAT_INCLUDE_DIRS}
@@ -49,7 +50,8 @@ file(GLOB SOURCES
 "src/drivers/*.cpp" 
 "src/utils/*.cpp" 
 "src/protocol/*.cc"
-"src/raw300_decoder/*.cpp")
+"src/raw300_decoder/*.cpp"
+"src/scheduler_center/*.cpp")
 
 
 add_executable(RM_Client src/main.cpp ${SOURCES})
