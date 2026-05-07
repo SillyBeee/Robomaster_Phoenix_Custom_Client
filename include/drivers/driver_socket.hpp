@@ -27,6 +27,8 @@ public:
 
     bool Connect();
     void Disconnect();
+    void SetThreadAffinity(const std::vector<int>& cpus);
+    void SetThreadPolicy(int policy, int priority);
 
     // 非阻塞尝试取一帧（如果有返回 true）
     bool TryGetFrame(Frame& out);

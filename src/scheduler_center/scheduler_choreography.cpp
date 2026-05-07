@@ -346,7 +346,9 @@ bool SchedulerChoreography::SetThreadPolicy(pthread_t thread, const int policy, 
     int rc = pthread_setschedparam(thread, policy, &param);
     if (rc != 0)
     {
-        LOG_ERROR("Error setting thread policy: {}", rc);
+        LOG_WARN("Failed to set thread policy (EPERM: need root for RT), fallback to SCHED_OTHER: {}", rc);
+        param.sched_priority = 0;
+        pthread_setschedparam(thread, SCHED_OTHER, &param);
         return false;
     }
     return true;

@@ -1,4 +1,5 @@
 #include "logger.hpp"
+#include "scheduler_center/scheduler_choreography.h"
 #include <SDL_gamecontroller.h>
 #include <drivers/driver_gamepad.hpp>
 #include <memory>
@@ -248,5 +249,15 @@ void GamePad::PrintState(std::ostream& os) const
 GamePad::~GamePad()
 {
     Shutdown();
+}
+
+void GamePad::SetThreadAffinity(const std::vector<int>& cpus) {
+    if (core_thread_.joinable())
+        SchedulerChoreography::SetThreadAffinity(core_thread_.native_handle(), cpus);
+}
+
+void GamePad::SetThreadPolicy(int policy, int priority) {
+    if (core_thread_.joinable())
+        SchedulerChoreography::SetThreadPolicy(core_thread_.native_handle(), policy, priority);
 }
 } // namespace drivers

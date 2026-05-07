@@ -4,7 +4,9 @@
 #include <map>
 #include <queue>
 #include <unordered_map>
-#include <memory> // 新增：智能指针依赖头文件
+#include <memory>
+#include <pthread.h>
+#include <sched.h>
 
 #include "scheduler_base.h"
 #include "utils_json_refactor.hpp"
@@ -22,13 +24,13 @@ public:
                                 const std::string &name = "", int processor_id = -1) override;
     bool RemoveTask(const std::string &name) override;
 
+    // 工具方法：为外部线程应用亲和性与调度策略
+    static bool SetThreadAffinity(pthread_t thread, const std::vector<int> &cpus);
+    static bool SetThreadPolicy(pthread_t thread, int policy, int priority);
+
 private:
     void ChoreoWorkerThread(int processor_id);
     void PoolWorkerThread(int processor_id);
-    // 设置线程亲和性
-    bool SetThreadAffinity(pthread_t thread, const std::vector<int> &cpus);
-    // 设置线程调度策略
-    bool SetThreadPolicy(pthread_t thread, const int policy, const int priority);
 
     SchedulerCenterConfig config_;
     std::vector<std::thread> choreo_threads_;

@@ -14,6 +14,8 @@ public:
     GamePad() = default;
     ~GamePad();
     bool Init();
+    void SetThreadAffinity(const std::vector<int>& cpus);
+    void SetThreadPolicy(int policy, int priority);
     int16_t GetInputState(int input);
     void Shutdown();
     void PrintState(std::ostream& os = std::cout) const;

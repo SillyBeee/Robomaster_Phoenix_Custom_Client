@@ -1,5 +1,6 @@
 #include "video_pipeline.hpp"
 #include "logger.hpp"
+#include "scheduler_center/scheduler_choreography.h"
 #include "utils_cv.hpp"
 #include <opencv2/opencv.hpp>
 
@@ -75,4 +76,14 @@ void VideoPipeline::PostUiFrame(const cv::Mat& mat) {
             ui_update_pending_.store(false);
         });
     }
+}
+
+void VideoPipeline::SetThreadAffinity(const std::vector<int>& cpus) {
+    if (thread_.joinable())
+        SchedulerChoreography::SetThreadAffinity(thread_.native_handle(), cpus);
+}
+
+void VideoPipeline::SetThreadPolicy(int policy, int priority) {
+    if (thread_.joinable())
+        SchedulerChoreography::SetThreadPolicy(thread_.native_handle(), policy, priority);
 }

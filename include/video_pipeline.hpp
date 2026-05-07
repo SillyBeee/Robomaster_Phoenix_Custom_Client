@@ -14,6 +14,8 @@ public:
 
     void Start(VideoSource& source);
     void Stop();
+    void SetThreadAffinity(const std::vector<int>& cpus);
+    void SetThreadPolicy(int policy, int priority);
 
     void SwitchSource(VideoSource& new_source);
 

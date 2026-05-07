@@ -1,4 +1,5 @@
 #include "drivers/driver_socket.hpp"
+#include "scheduler_center/scheduler_choreography.h"
 
 #include "logger.hpp"
 #include <algorithm>
@@ -386,3 +387,13 @@ void SocketImageReceiver::PollLoop()
 }
 
 } // namespace drivers
+
+void drivers::SocketImageReceiver::SetThreadAffinity(const std::vector<int>& cpus) {
+    if (core_thread_.joinable())
+        SchedulerChoreography::SetThreadAffinity(core_thread_.native_handle(), cpus);
+}
+
+void drivers::SocketImageReceiver::SetThreadPolicy(int policy, int priority) {
+    if (core_thread_.joinable())
+        SchedulerChoreography::SetThreadPolicy(core_thread_.native_handle(), policy, priority);
+}
