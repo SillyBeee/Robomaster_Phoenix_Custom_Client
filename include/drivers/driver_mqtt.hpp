@@ -5,6 +5,7 @@
 #include <mqtt/async_client.h>
 #include "logger.hpp"
 #include <unordered_map>
+#include <vector>
 
 namespace drivers
 {
@@ -70,6 +71,7 @@ public:
 
     bool Connect();
     bool Disconnect();
+    void SetConfig(const std::string& ip, int port, const std::string& client_id);
     // void StartProcessing();
     // void StopProcessing();
 
@@ -78,6 +80,7 @@ public:
     bool Publish(OutputTopic topic, const std::string& payload, int qos = -1);
     bool Subscribe(const std::string& topic, int qos = 1);
     bool Subscribe(InputTopic topic, int qos = -1);
+    void SetCustomByteBlockHandler(std::function<void(const std::vector<uint8_t>&)> handler);
 
     // 通过enum获取topic string 与
     static const TopicMeta& GetInputTopic(InputTopic t);
@@ -99,6 +102,7 @@ private:
     std::string client_id_;
 
     std::mutex handler_mutex_;
+    std::function<void(const std::vector<uint8_t>&)> custom_byte_block_handler_;
 
     //enum与string&qos对应表
     static const std::array<TopicMeta, static_cast<size_t>(InputTopic::COUNT_INPUT_TOPICS)> INPUT_TOPIC_META_DICT;

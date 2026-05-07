@@ -1,3 +1,5 @@
 build
 .cache
 .vscode
+raw300_decoder
+image

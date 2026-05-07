@@ -27,11 +27,17 @@ void ComponentManager::LoadSettings(const std::string& config_path) {
         LOG_ERROR("Failed to load configuration from {}", config_path);
         return;
     }
-    LOG_INFO("config: resolution={}x{}, port={}, baudrate={}",
-             utils.GetConfig().resolution[0],
-             utils.GetConfig().resolution[1],
-             utils.GetConfig().port,
-             utils.GetConfig().baudrate);
+    settings_ = utils.GetConfig();
+    LOG_INFO("config: resolution={}x{}, decode_test_mode={}, wait_sps_pps={}, wait_idr={}",
+             settings_.resolution[0],
+             settings_.resolution[1],
+             settings_.decode_test_mode,
+             settings_.h264_wait_for_sps_pps ? "true" : "false",
+             settings_.h264_wait_for_idr ? "true" : "false");
+}
+
+const ClientConfig& ComponentManager::GetSettings() const {
+    return settings_;
 }
 
 void ComponentManager::LoadComponents(std::string config_path) {

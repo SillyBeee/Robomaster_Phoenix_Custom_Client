@@ -1,5 +1,6 @@
 {
     "resolution": [2560, 1440],
-    "port": "/dev/ttyACM0",
-    "baudrate": 921600
+    "decode_test_mode": "full_pipeline",
+    "h264_wait_for_sps_pps": true,
+    "h264_wait_for_idr": true
 }

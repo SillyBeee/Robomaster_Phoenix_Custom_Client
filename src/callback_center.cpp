@@ -1,4 +1,5 @@
 #include "callback_center.hpp"
+#include "driver_mqtt.hpp"
 #include "logger.hpp"
 void callback_open_url(slint::SharedString url)
 {
@@ -77,4 +78,38 @@ void callback_move_window(slint::ComponentHandle<MainWindow> &window, float dx, 
         pos.x + static_cast<int>(dx), 
         pos.y + static_cast<int>(dy)
     }));
+}
+
+bool callback_apply_mqtt_config(drivers::MqttClient& mqtt_client,
+                                slint::SharedString ip,
+                                slint::SharedString port,
+                                slint::SharedString client_id)
+{
+    const std::string ip_str(ip);
+    const std::string port_str(port);
+    const std::string client_id_str(client_id);
+
+    int port_num = 0;
+    try
+    {
+        port_num = std::stoi(port_str);
+    }
+    catch (const std::exception& e)
+    {
+        LOG_ERROR("MQTT config rejected, invalid port '{}': {}", port_str, e.what());
+        return false;
+    }
+
+    if (ip_str.empty() || client_id_str.empty() || port_num <= 0 || port_num > 65535)
+    {
+        LOG_ERROR("MQTT config rejected, ip/client_id/port invalid. ip='{}', client_id='{}', port={}",
+                  ip_str, client_id_str, port_num);
+        return false;
+    }
+
+    mqtt_client.Disconnect();
+    mqtt_client.SetConfig(ip_str, port_num, client_id_str);
+    const bool connect_ok = mqtt_client.Connect();
+    LOG_INFO("MQTT apply config result={} target={}:{} client_id={}", connect_ok, ip_str, port_num, client_id_str);
+    return connect_ok;
 }

@@ -9,7 +9,7 @@
 
 
 
-inline slint::Image mat_to_slint_image(const cv::Mat &mat);
+slint::Image MatToSlintImage(const cv::Mat &mat);
 
 
 

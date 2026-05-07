@@ -4,6 +4,11 @@
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 
+namespace drivers
+{
+class MqttClient;
+}
+
 void callback_open_url(slint::SharedString url);
 
 void callback_set_resolution(slint::ComponentHandle<MainWindow>& window, slint::SharedString resolution);
@@ -17,6 +22,11 @@ void callback_maximize_window(slint::ComponentHandle<MainWindow>& window , bool 
 void callback_close_window(slint::ComponentHandle<MainWindow>& window);
 
 void callback_move_window(slint::ComponentHandle<MainWindow>& window, float dx, float dy);
+
+bool callback_apply_mqtt_config(drivers::MqttClient& mqtt_client,
+                                slint::SharedString ip,
+                                slint::SharedString port,
+                                slint::SharedString client_id);
 
 
 

@@ -4,70 +4,23 @@
 #include "driver_gamepad.hpp"
 #include "driver_mqtt.hpp"
 #include "driver_socket.hpp"
+#include "raw300_decoder/vtx_mqtt_stream_processor.hpp"
 #include "filesystem"
 #include "logger.hpp"
 #include "slint.h"
 #include "utils_cv.hpp"
+#include "utils_json_refactor.hpp"
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
 #include <atomic>
 #include <cstring>
+#include <functional>
+#include <memory>
 #include <mutex>
 #include <thread>
 
-namespace
-{
-slint::Image MatToSlintImage(const cv::Mat& mat)
-{
-    cv::Mat rgb;
-    if (mat.type() == CV_8UC3)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_BGR2RGB);
-    }
-    else if (mat.type() == CV_8UC4)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_BGRA2RGB);
-    }
-    else if (mat.type() == CV_8UC1)
-    {
-        cv::cvtColor(mat, rgb, cv::COLOR_GRAY2RGB);
-    }
-    else
-    {
-        return slint::Image();
-    }
 
-    const int w = rgb.cols;
-    const int h = rgb.rows;
-    slint::SharedPixelBuffer<slint::Rgb8Pixel> buf(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
-    auto dst = buf.begin();
-
-    if (rgb.isContinuous())
-    {
-        const uint8_t* src = rgb.data;
-        const size_t pixels = static_cast<size_t>(w) * static_cast<size_t>(h);
-        for (size_t i = 0; i < pixels; ++i)
-        {
-            dst[i] = slint::Rgb8Pixel { src[i * 3], src[i * 3 + 1], src[i * 3 + 2] };
-        }
-    }
-    else
-    {
-        for (int y = 0; y < h; ++y)
-        {
-            const uint8_t* row = rgb.ptr<uint8_t>(y);
-            for (int x = 0; x < w; ++x)
-            {
-                const size_t i = static_cast<size_t>(y) * static_cast<size_t>(w) + static_cast<size_t>(x);
-                dst[i] = slint::Rgb8Pixel { row[x * 3], row[x * 3 + 1], row[x * 3 + 2] };
-            }
-        }
-    }
-
-    return slint::Image(std::move(buf));
-}
-}
 
 int main()
 {
@@ -78,6 +31,9 @@ int main()
 
     auto main_window = MainWindow::create();
     auto&& callback_factory = main_window->global<Callback_Factory>();
+    drivers::GamePad gamepad;
+    drivers::MqttClient mqtt_client("192.168.12.1", 3333, "3");
+    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1024 * 1024);
 
     callback_factory.on_open_url(
         [](slint::SharedString url)
@@ -101,15 +57,36 @@ int main()
                                     { callback_move_window(main_window, dx, dy); });
     callback_factory.on_save_to_json([&callback_factory, &components_path]()
                                      { COMPONENT_MANAGER.SaveComponents(components_path.string()); });
+    callback_factory.on_apply_mqtt_config(std::bind(callback_apply_mqtt_config,
+                                                    std::ref(mqtt_client),
+                                                    std::placeholders::_1,
+                                                    std::placeholders::_2,
+                                                    std::placeholders::_3));
 
     COMPONENT_MANAGER.Init(callback_factory);
     COMPONENT_MANAGER.LoadSettings(config_path.string());
     COMPONENT_MANAGER.LoadComponents(components_path.string());
     // pose_test_slider(callback_factory);
 
-    drivers::GamePad gamepad;
-    drivers::MqttClient mqtt_client("192.168.12.1",3333, "3");
-    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1920 * 1080);
+    const std::filesystem::path mqtt_image_dir = source_path / "image";
+    auto vtx_stream_processor = std::make_shared<hrvtx::standalone::VtxMqttStreamProcessor>(
+        mqtt_image_dir, COMPONENT_MANAGER.GetSettings().decode_test_mode,
+        COMPONENT_MANAGER.GetSettings().h264_wait_for_sps_pps, COMPONENT_MANAGER.GetSettings().h264_wait_for_idr);
+    std::string decoder_err;
+
+    if (!vtx_stream_processor->start(decoder_err))
+    {
+        LOG_ERROR("Failed to start raw300 decoder: {}", decoder_err);
+    }
+    else
+    {
+        mqtt_client.SetCustomByteBlockHandler(
+            [vtx_stream_processor](const std::vector<uint8_t>& packet_data)
+            {
+                vtx_stream_processor->OnPacket(packet_data);
+            }
+        );
+    }
 
     gamepad.Init();
     mqtt_client.Connect();
@@ -127,10 +104,37 @@ int main()
       return;
     }
     
-    // 实例化解码器
-    HevcDecoder decoder;
+    // 实例化解码器，连续失败时会重建以清理参考帧状态
+    auto decoder = std::make_unique<HevcDecoder>();
     drivers::SocketImageReceiver::Frame frame;
     int empty_count = 0;
+    int decode_fail_count = 0;
+    cv::Size last_good_size(1280, 720);
+    constexpr int kClearUiNoFrameChecks = 2;          // 2 * 500ms = 1s
+    constexpr int kDecoderResetFailThreshold = 30;    // 连续失败后重建解码器
+
+    auto post_ui_frame = [&](const cv::Mat& mat) {
+      {
+        std::lock_guard<std::mutex> lock(ui_frame_mutex);
+        latest_ui_frame = MatToSlintImage(mat);
+      }
+      if (!ui_update_pending.exchange(true)) {
+        slint::invoke_from_event_loop([callback_factory_ptr, &ui_frame_mutex, &latest_ui_frame, &ui_update_pending]() {
+          slint::Image frame_for_ui;
+          {
+            std::lock_guard<std::mutex> lock(ui_frame_mutex);
+            frame_for_ui = latest_ui_frame;
+          }
+          callback_factory_ptr->set_video_frame(frame_for_ui);
+          ui_update_pending.store(false);
+        });
+      }
+    };
+
+    auto clear_ui = [&]() {
+      cv::Mat blank(last_good_size.height, last_good_size.width, CV_8UC3, cv::Scalar(0, 0, 0));
+      post_ui_frame(blank);
+    };
 
     while (!stop_flag) {
       if (socket_receiver.GetFrameBlocking(frame, 500)) {
@@ -139,29 +143,26 @@ int main()
         cv::Mat img;
         // 使用 FFmpeg 解码器替代 imdecode
         // cv::Mat img = cv::imdecode(frame, cv::IMREAD_COLOR); 
-        if (decoder.decode(frame, img) && !img.empty()) {
+        if (decoder->decode(frame, img) && !img.empty()) {
+          decode_fail_count = 0;
+          last_good_size = img.size();
           LOG_DEBUG("SocketThread decoded image size={}x{}", img.cols, img.rows);
-          {
-            std::lock_guard<std::mutex> lock(ui_frame_mutex);
-            latest_ui_frame = MatToSlintImage(img);
-          }
-          if (!ui_update_pending.exchange(true)) {
-            slint::invoke_from_event_loop([callback_factory_ptr, &ui_frame_mutex, &latest_ui_frame, &ui_update_pending]() {
-              slint::Image frame_for_ui;
-              {
-                std::lock_guard<std::mutex> lock(ui_frame_mutex);
-                frame_for_ui = latest_ui_frame;
-              }
-              callback_factory_ptr->set_video_frame(frame_for_ui);
-              ui_update_pending.store(false);
-            });
-          }
+          post_ui_frame(img);
         } else {
-          LOG_WARN("Decode failed or image empty, bytes={}", frame.size());
+          ++decode_fail_count;
+          if (decode_fail_count >= kDecoderResetFailThreshold) {
+            LOG_WARN("SocketThread decode failed {} times, resetting HEVC decoder", decode_fail_count);
+            decoder = std::make_unique<HevcDecoder>();
+            decode_fail_count = 0;
+            clear_ui();
+          }
         }
       } else {
         // 超时或 receiver 已停止
         ++empty_count;
+        if (empty_count >= kClearUiNoFrameChecks) {
+          clear_ui();
+        }
         if (empty_count % 5 == 0) { // 每 20 次（约10s）打印一次，避免过多日志
           LOG_DEBUG("SocketThread waiting for frames... (no frame in last {} checks)", empty_count);
         }
@@ -177,6 +178,8 @@ int main()
     {
         socket_thread.join();
     }
+    vtx_stream_processor->stop();
+
     // if(mqtt_thread.joinable()) mqtt_thread.join();
     LOG_INFO("Application exiting");
     return 0;
