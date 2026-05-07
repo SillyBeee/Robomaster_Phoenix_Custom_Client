@@ -9,6 +9,7 @@
 #include "logger.hpp"
 #include "slint.h"
 #include "utils_cv.hpp"
+#include "utils_json_refactor.hpp"
 #include <app-window.h>
 #include <opencv2/opencv.hpp>
 #include <slint_image.h>
@@ -68,7 +69,9 @@ int main()
     // pose_test_slider(callback_factory);
 
     const std::filesystem::path mqtt_image_dir = source_path / "image";
-    auto vtx_stream_processor = std::make_shared<hrvtx::standalone::VtxMqttStreamProcessor>(mqtt_image_dir);
+    auto vtx_stream_processor = std::make_shared<hrvtx::standalone::VtxMqttStreamProcessor>(
+        mqtt_image_dir, COMPONENT_MANAGER.GetSettings().decode_test_mode,
+        COMPONENT_MANAGER.GetSettings().h264_wait_for_sps_pps, COMPONENT_MANAGER.GetSettings().h264_wait_for_idr);
     std::string decoder_err;
 
     if (!vtx_stream_processor->start(decoder_err))

@@ -10,7 +10,8 @@ sudo apt install -y build-essential cmake git wget tar pkg-config \
   libssl-dev libopencv-dev libsdl2-dev libspdlog-dev \
   nlohmann-json3-dev protobuf-compiler libprotobuf-dev \
   libpaho-mqtt-dev libavcodec-dev libavformat-dev libavutil-dev \
-  libswscale-dev pkg-config qt6-base-dev
+  libswscale-dev pkg-config qt6-base-dev \
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
 # ...existing code...
 # 下载并安装 Slint（保持原有方式），但先判断是否已安装

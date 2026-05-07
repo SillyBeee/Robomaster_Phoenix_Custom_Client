@@ -13,11 +13,16 @@ using json = nlohmann::json;
 struct ClientConfig
 {
     std::vector<int> resolution = { 1920, 1080 };
-    std::string port = "/dev/ttyUSB0";
-    int baudrate = 115200;
+    std::string decode_test_mode = "full_pipeline";
+    // 兼容 repeat_headers/intra-refresh 不同策略：
+    // true/true = 严格模式；true/false = 兼容无 IDR 关键帧流
+    bool h264_wait_for_sps_pps = true;
+    bool h264_wait_for_idr = true;
 
     // 自动生成 to_json 和 from_json
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ClientConfig, resolution, port, baudrate)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(ClientConfig, resolution,
+                                   decode_test_mode, h264_wait_for_sps_pps,
+                                   h264_wait_for_idr)
 };
 
 struct ComponentConfig

@@ -3,6 +3,7 @@
 
 
 #include "protocol.pb.h"
+#include "utils_json_refactor.hpp"
 #include <app-window.h>
 #include <slint_color.h>
 #include <string>
@@ -18,6 +19,7 @@ public:
     void Init(const Callback_Factory& factory);
 
     void LoadSettings(const std::string& config_path = "");
+    const ClientConfig& GetSettings() const;
     void LoadComponents(std::string config_path = "");
     void SaveComponents(const std::string& config_path = "");
 
@@ -42,6 +44,7 @@ private:
 
 private:
 
+    ClientConfig settings_;
     const Callback_Factory* factory_ptr_ = nullptr;
 };
 

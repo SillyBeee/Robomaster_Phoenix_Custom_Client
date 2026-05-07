@@ -32,7 +32,7 @@ const std::array<TopicMeta, static_cast<size_t>(InputTopic::COUNT_INPUT_TOPICS)>
     TopicMeta { "PenaltyInfo", 1 },
     TopicMeta { "RobotPathPlanInfo", 1 },
     TopicMeta { "RadarInfoToClient", 1 },
-    TopicMeta { "CustomByteBlock", 1 },
+    TopicMeta { "CustomByteBlock", 0 },
     TopicMeta { "MapClickInfoNotify", 1 },
     TopicMeta { "TechCoreMotionStateSync", 1 },
     TopicMeta { "RobotPerformanceSelectionSync", 1 },
@@ -94,11 +94,10 @@ bool MqttClient::Connect()
         LOG_INFO("Connecting to MQTT server...");
         auto token = client_->connect(connect_options);
         auto rsp = token->get_connect_response();
-        if (!rsp.is_session_present())
-        {
-            LOG_INFO("No session present on server. Subscribing...");
-            InitSubscriber();
-        }
+        LOG_INFO("MQTT session present on server: {}", rsp.is_session_present() ? "true" : "false");
+        // Always (re)subscribe to enforce current QoS settings in code,
+        // especially for high-rate streaming topics.
+        InitSubscriber();
         LOG_INFO("Connected to MQTT Server at {}:{}", ip_, port_);
         return true;
     }
