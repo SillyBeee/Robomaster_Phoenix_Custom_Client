@@ -85,31 +85,25 @@ bool MqttClient::Connect()
         auto connect_options = mqtt::connect_options_builder::v3()
                                    .clean_session(false)
                                    .automatic_reconnect()
+                                   .connect_timeout(std::chrono::seconds(5))
                                    .finalize();
         //设置回调
-        this->client_cb_ = std::make_unique<ClientCallback>(std::bind(&MqttClient::MessageCallback, this, std::placeholders::_1));
+        auto msg_fn = std::bind(&MqttClient::MessageCallback, this, std::placeholders::_1);
+        auto conn_fn = std::bind(&MqttClient::InitSubscriber, this);
+        this->client_cb_ = std::make_unique<ClientCallback>(msg_fn, conn_fn);
         client_->set_callback(*client_cb_);
 
         client_->start_consuming();
         LOG_INFO("Connecting to MQTT server...");
-        auto token = client_->connect(connect_options);
-        auto rsp = token->get_connect_response();
-        LOG_INFO("MQTT session present on server: {}", rsp.is_session_present() ? "true" : "false");
-        // Always (re)subscribe to enforce current QoS settings in code,
-        // especially for high-rate streaming topics.
-        InitSubscriber();
-        LOG_INFO("Connected to MQTT Server at {}:{}", ip_, port_);
+        client_->connect(connect_options);
+        LOG_INFO("MQTT connect initiated (non-blocking) to {}:{}", ip_, port_);
         return true;
     }
     catch (const mqtt::exception& e)
     {
-        LOG_ERROR("Failed to connect to MQTT broker at {}:{} - what(): {}", ip_, port_, e.what());
+        LOG_WARN("MQTT connect initiation failed to {}:{} - {}", ip_, port_, e.what());
+        return false;
     }
-    catch (...)
-    {
-        LOG_ERROR("Unknown error connecting to MQTT broker at {}:{}", ip_, port_);
-    }
-    return false;
 }
 
 bool MqttClient::Disconnect()

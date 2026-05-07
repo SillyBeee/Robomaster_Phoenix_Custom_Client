@@ -2,6 +2,7 @@
 #define CALLBACK_CENTER_HPP
 #include "slint_string.h"
 #include <app-window.h>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
 
 namespace drivers
@@ -27,6 +28,11 @@ bool callback_apply_mqtt_config(drivers::MqttClient& mqtt_client,
                                 slint::SharedString ip,
                                 slint::SharedString port,
                                 slint::SharedString client_id);
+
+void RegisterCallbacks(const Callback_Factory& factory,
+                       slint::ComponentHandle<MainWindow> window,
+                       drivers::MqttClient& mqtt_client,
+                       const std::filesystem::path& components_path);
 
 
 

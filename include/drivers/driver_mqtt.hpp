@@ -115,16 +115,21 @@ class ClientCallback : public virtual mqtt::callback
 {
 public:
     using MsgFn = std::function<void(mqtt::const_message_ptr)>;
-    explicit ClientCallback(MsgFn fn) : fn_(std::move(fn)) {}
+    using ConnFn = std::function<void()>;
+    explicit ClientCallback(MsgFn msg_fn, ConnFn conn_fn = nullptr)
+        : msg_fn_(std::move(msg_fn)), conn_fn_(std::move(conn_fn)) {}
+    void connected(const std::string&) override
+    {
+        LOG_INFO("MQTT connected");
+        if (conn_fn_) conn_fn_();
+    }
     void connection_lost(const std::string& cause) override
     {
         LOG_WARN("MQTT connection lost: {}", cause);
     }
     void message_arrived(mqtt::const_message_ptr msg) override
     {
-        if (fn_){
-            fn_(msg);
-        }  
+        if (msg_fn_) msg_fn_(msg);
     }
     void delivery_complete(mqtt::delivery_token_ptr token) override
     {
@@ -132,7 +137,8 @@ public:
     }
 
 private:
-    MsgFn fn_;
+    MsgFn msg_fn_;
+    ConnFn conn_fn_;
 };
 
 

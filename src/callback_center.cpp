@@ -1,4 +1,5 @@
 #include "callback_center.hpp"
+#include "component_manager.hpp"
 #include "driver_mqtt.hpp"
 #include "logger.hpp"
 void callback_open_url(slint::SharedString url)
@@ -112,4 +113,39 @@ bool callback_apply_mqtt_config(drivers::MqttClient& mqtt_client,
     const bool connect_ok = mqtt_client.Connect();
     LOG_INFO("MQTT apply config result={} target={}:{} client_id={}", connect_ok, ip_str, port_num, client_id_str);
     return connect_ok;
+}
+
+void RegisterCallbacks(const Callback_Factory& factory,
+                       slint::ComponentHandle<MainWindow> window,
+                       drivers::MqttClient& mqtt_client,
+                       const std::filesystem::path& components_path) {
+    factory.on_open_url([](slint::SharedString url) {
+        callback_open_url(url);
+    });
+    factory.on_set_resolution([window](slint::SharedString resolution) mutable {
+        callback_set_resolution(window, resolution);
+    });
+    factory.on_set_fullscreen([window](bool is_fullscreen) mutable {
+        callback_set_fullscreen(window, is_fullscreen);
+    });
+    factory.on_minimize_window([window]() mutable {
+        callback_minimize_window(window);
+    });
+    factory.on_maximize_window([window](bool is_maximized) mutable {
+        callback_maximize_window(window, is_maximized);
+    });
+    factory.on_close_window([window]() mutable {
+        callback_close_window(window);
+    });
+    factory.on_move_window([window](float dx, float dy) mutable {
+        callback_move_window(window, dx, dy);
+    });
+    factory.on_save_to_json([&components_path]() {
+        COMPONENT_MANAGER.SaveComponents(components_path.string());
+    });
+    factory.on_apply_mqtt_config([&mqtt_client](slint::SharedString ip,
+                                                 slint::SharedString port,
+                                                 slint::SharedString client_id) {
+        return callback_apply_mqtt_config(mqtt_client, ip, port, client_id);
+    });
 }
