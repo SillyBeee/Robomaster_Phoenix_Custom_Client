@@ -3,6 +3,7 @@
 #include "driver_gamepad.hpp"
 #include "driver_mqtt.hpp"
 #include "driver_socket.hpp"
+#include "driver_urdf_renderer.hpp"
 #include "raw300_decoder/vtx_mqtt_stream_processor.hpp"
 #include "scheduler_center/scheduler_manager.h"
 #include "utils_json_refactor.hpp"
@@ -20,6 +21,26 @@ static void ApplyThreadConfig(T& component, const SchedulerCenterConfig& cfg, in
     component.SetThreadAffinity(cfg.choreography.thread_affinities[idx]);
     component.SetThreadPolicy(cfg.choreography.thread_policies[idx].first,
                               cfg.choreography.thread_policies[idx].second);
+}
+
+// ============================================================
+//  URDF 加载
+// ============================================================
+static std::unique_ptr<drivers::URDFRendererPlugin>
+SetupURDF(const std::filesystem::path& src, const ClientConfig& settings) {
+    LOG_INFO("Setting up URDF from: {}", src.string());
+    auto plugin = std::make_unique<drivers::URDFRendererPlugin>();
+    if (!plugin->initialize(nullptr)) {
+        LOG_ERROR("URDF renderer init failed: {}", plugin->getLastError());
+        return nullptr;
+    }
+    auto urdf_path = src / settings.urdf_path;
+    if (plugin->loadURDF(urdf_path.string()) != drivers::URDF_SUCCESS) {
+        LOG_ERROR("URDF load failed: {} - {}", urdf_path.string(), plugin->getLastError());
+        return nullptr;
+    }
+    LOG_INFO("URDF loaded: {}", urdf_path.string());
+    return plugin;
 }
 
 // ============================================================
@@ -95,23 +116,31 @@ int main() {
     auto main_window = MainWindow::create();
     auto&& cb = main_window->global<Callback_Factory>();
 
-    // ── 驱动 ──
-    drivers::GamePad gamepad;
-    drivers::MqttClient mqtt_client("192.168.12.1", 3333, "3");
-    drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1024 * 1024);
-
-    RegisterCallbacks(cb, main_window, mqtt_client, components_path);
-
+    // ── 设置 ──
     COMPONENT_MANAGER.Init(cb);
     COMPONENT_MANAGER.LoadSettings(config_path.string());
     COMPONENT_MANAGER.LoadComponents(components_path.string());
+    const auto& settings = COMPONENT_MANAGER.GetSettings();
+
+    // ── 驱动 ──
+    drivers::GamePad gamepad;
+    // drivers::MqttClient mqtt_client("192.168.12.1", 3333, settings.default_mqtt_client_id);
+    // drivers::SocketImageReceiver socket_receiver("192.168.12.2", 3334, 16 * 1024 * 1024);
+    drivers::MqttClient mqtt_client("127.0.0.1", 3333, settings.default_mqtt_client_id);
+    drivers::SocketImageReceiver socket_receiver("127.0.0.1", 3334, 16 * 1024 * 1024);
+
+    RegisterCallbacks(cb, main_window, mqtt_client, components_path);
+
+
+    // ── URDF ──
+    // auto urdf = SetupURDF(src, settings);
 
     // ── 调度器 ──
     auto sched_cfg = MakeSchedulerConfig();
     SchedulerManager::GetInstance().Start(sched_cfg);
 
     // ── VTX ──
-    auto vtx = SetupVtxProcessor(mqtt_client, COMPONENT_MANAGER.GetSettings(), src / "image");
+    auto vtx = SetupVtxProcessor(mqtt_client, settings, src / "image");
 
     // ── 手柄 ──
     gamepad.Init();
@@ -142,4 +171,5 @@ int main() {
     video_pipeline.Stop();
     SchedulerManager::GetInstance().Stop();
     if (vtx) vtx->stop();
+    mqtt_client.Disconnect();
 }

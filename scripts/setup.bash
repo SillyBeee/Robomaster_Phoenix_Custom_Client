@@ -6,11 +6,13 @@ set -e
 # 更新 apt 并安装系统依赖（Paho C 使用 apt 安装，其他库也用 apt）
 echo "更新 apt 并安装系统依赖..."
 sudo apt install -y build-essential cmake git wget tar pkg-config \
-  libssl-dev libopencv-dev libsdl2-dev libspdlog-dev \
+  libssl-dev libopencv-dev libsdl2-dev libspdlog-dev libfmt-dev \
   nlohmann-json3-dev protobuf-compiler libprotobuf-dev \
   libpaho-mqtt-dev libavcodec-dev libavformat-dev libavutil-dev \
   libswscale-dev pkg-config qt6-base-dev \
-  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+  libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+  gstreamer1.0-libav \
+  libogre-1.12-dev libassimp-dev liburdfdom-dev
 
 # ...existing code...
 # 下载并安装 Slint（保持原有方式），但先判断是否已安装

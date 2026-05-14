@@ -2,5 +2,7 @@
     "resolution": [2560, 1440],
     "decode_test_mode": "full_pipeline",
     "h264_wait_for_sps_pps": true,
-    "h264_wait_for_idr": true
+    "h264_wait_for_idr": true,
+    "urdf_path": "arm_description/urdf/Engineer2.urdf",
+    "default_mqtt_client_id": "3"
 }

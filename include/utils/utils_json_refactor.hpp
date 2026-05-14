@@ -18,11 +18,14 @@ struct ClientConfig
     // true/true = 严格模式；true/false = 兼容无 IDR 关键帧流
     bool h264_wait_for_sps_pps = true;
     bool h264_wait_for_idr = true;
+    std::string urdf_path = "urdf_renderer/arm_description/urdf/Engineer2.urdf";
+    std::string default_mqtt_client_id = "3";
 
     // 自动生成 to_json 和 from_json
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ClientConfig, resolution,
                                    decode_test_mode, h264_wait_for_sps_pps,
-                                   h264_wait_for_idr)
+                                   h264_wait_for_idr, urdf_path,
+                                   default_mqtt_client_id)
 };
 
 struct ComponentConfig

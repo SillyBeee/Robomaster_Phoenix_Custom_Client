@@ -87,7 +87,7 @@ public:
     static const TopicMeta& GetOutputTopic(OutputTopic t);
 
 
-    ~MqttClient() = default;
+    ~MqttClient();
 
 private:
     void InitSubscriber();

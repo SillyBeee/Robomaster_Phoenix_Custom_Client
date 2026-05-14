@@ -6,7 +6,7 @@
 
 
 #ifndef LOG_OUTPUT
-#define LOG_OUTPUT 0
+#define LOG_OUTPUT 1
 #endif
 
 
@@ -78,16 +78,23 @@ void MqttClient::SetConfig(const std::string& ip, int port, const std::string& c
     this->client_ = std::make_unique<mqtt::async_client>(mqtt_addr, client_id_);
 }
 
+MqttClient::~MqttClient() {
+    try {
+        if (client_) {
+            client_->disconnect()->wait_for(std::chrono::seconds(3));
+            client_->stop_consuming();
+        }
+    } catch (...) {}
+}
+
 bool MqttClient::Connect()
 {
     try
     {
         auto connect_options = mqtt::connect_options_builder::v3()
                                    .clean_session(false)
-                                   .automatic_reconnect()
                                    .connect_timeout(std::chrono::seconds(5))
                                    .finalize();
-        //设置回调
         auto msg_fn = std::bind(&MqttClient::MessageCallback, this, std::placeholders::_1);
         auto conn_fn = std::bind(&MqttClient::InitSubscriber, this);
         this->client_cb_ = std::make_unique<ClientCallback>(msg_fn, conn_fn);
@@ -102,6 +109,7 @@ bool MqttClient::Connect()
     catch (const mqtt::exception& e)
     {
         LOG_WARN("MQTT connect initiation failed to {}:{} - {}", ip_, port_, e.what());
+        try { client_->stop_consuming(); } catch (...) {}
         return false;
     }
 }
@@ -111,18 +119,18 @@ bool MqttClient::Disconnect()
     try
     {
         LOG_INFO("Disconnecting from MQTT server...");
-        auto token = client_->disconnect();
-        token->wait();
+        client_->disconnect()->wait_for(std::chrono::seconds(3));
+        client_->stop_consuming();
         LOG_INFO("Disconnected from MQTT server.");
         return true;
     }
     catch (const mqtt::exception& e)
     {
-        LOG_ERROR("Failed to disconnect from MQTT broker - what(): {}", e.what());
+        LOG_WARN("MQTT disconnect: {}", e.what());
     }
     catch (...)
     {
-        LOG_ERROR("Unknown error disconnecting from MQTT broker");
+        LOG_WARN("MQTT disconnect: unknown error");
     }
     return false;
 }

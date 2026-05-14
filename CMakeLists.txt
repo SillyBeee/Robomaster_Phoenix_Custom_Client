@@ -19,6 +19,10 @@ find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(fmt REQUIRED)
+find_package(OGRE REQUIRED)
+find_package(assimp REQUIRED)
+find_package(urdfdom REQUIRED)
+find_package(Threads REQUIRED)
 
 # --- 查找 FFmpeg ---
 find_package(PkgConfig REQUIRED)
@@ -43,6 +47,9 @@ include_directories(
     ${GSTREAMER_INCLUDE_DIRS}
     ${GSTREAMER_CFLAGS_OTHER}
     ${GSTREAMER_LIBRARY_DIRS}
+    ${OGRE_INCLUDE_DIRS}
+    ${ASSIMP_INCLUDE_DIRS}
+    ${urdfdom_INCLUDE_DIRS}
 )
 
 file(GLOB SOURCES 
@@ -71,6 +78,10 @@ ${AVUTIL_LIBRARIES}
 ${SWSCALE_LIBRARIES}
  fmt::fmt
  ${GSTREAMER_LIBRARIES}
+ ${OGRE_LIBRARIES}
+ ${ASSIMP_LIBRARIES}
+ ${urdfdom_LIBRARIES}
+ Threads::Threads
 )
 
 
@@ -79,3 +90,4 @@ if (WIN32)
 endif()
 
 add_compile_definitions(PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+add_compile_definitions(HAVE_OPENCV)
