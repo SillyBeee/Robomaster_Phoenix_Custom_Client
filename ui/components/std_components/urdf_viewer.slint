@@ -1,0 +1,12 @@
+import { Callback_Factory } from "../../callback_factory.slint";
+
+export component UrdfViewer {
+    width: 100%;
+    height: 100%;
+
+    Image {
+        source: Callback_Factory.urdf_frame;
+        width: 100%;
+        height: 100%;
+    }
+}

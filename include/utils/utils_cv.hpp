@@ -6,10 +6,8 @@
 #include <slint.h>
 #include <slint_image.h>
 
-
-
-
 slint::Image MatToSlintImage(const cv::Mat &mat);
+slint::Image MatRgbaToSlintImage(const cv::Mat &mat);
 
 
 

@@ -91,3 +91,29 @@ endif()
 
 add_compile_definitions(PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 add_compile_definitions(HAVE_OPENCV)
+
+# ── URDF 渲染测试 ──
+add_executable(test_urdf_render
+    tests/test_urdf_render.cpp
+    src/drivers/driver_urdf_loader.cpp
+    src/drivers/driver_urdf_renderer.cpp
+    src/utils/utils_cv.cpp
+)
+target_include_directories(test_urdf_render PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/utils
+    ${OGRE_INCLUDE_DIRS}
+    ${ASSIMP_INCLUDE_DIRS}
+    ${urdfdom_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+)
+target_link_libraries(test_urdf_render PRIVATE
+    ${OGRE_LIBRARIES}
+    ${ASSIMP_LIBRARIES}
+    ${urdfdom_LIBRARIES}
+    ${OpenCV_LIBS}
+    Threads::Threads
+    Slint::Slint
+)
+target_compile_definitions(test_urdf_render PRIVATE HAVE_OPENCV PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")

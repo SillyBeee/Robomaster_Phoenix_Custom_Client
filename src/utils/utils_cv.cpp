@@ -37,3 +37,33 @@ slint::Image MatToSlintImage(const cv::Mat &mat)
 
     return slint::Image(std::move(buf));
 }
+
+slint::Image MatRgbaToSlintImage(const cv::Mat &mat)
+{
+    if (mat.type() != CV_8UC4) {
+        return slint::Image();
+    }
+
+    const int w = mat.cols;
+    const int h = mat.rows;
+    slint::SharedPixelBuffer<slint::Rgba8Pixel> buf(static_cast<uint32_t>(w), static_cast<uint32_t>(h));
+    auto dst = buf.begin();
+
+    if (mat.isContinuous()) {
+        const uint8_t *src = mat.data;
+        size_t pixels = static_cast<size_t>(w) * static_cast<size_t>(h);
+        for (size_t i = 0; i < pixels; ++i) {
+            dst[i] = slint::Rgba8Pixel{ src[i*4], src[i*4+1], src[i*4+2], src[i*4+3] };
+        }
+    } else {
+        for (int y = 0; y < h; ++y) {
+            const uint8_t *row = mat.ptr<uint8_t>(y);
+            for (int x = 0; x < w; ++x) {
+                size_t i = static_cast<size_t>(y) * w + x;
+                dst[i] = slint::Rgba8Pixel{ row[x*4], row[x*4+1], row[x*4+2], row[x*4+3] };
+            }
+        }
+    }
+
+    return slint::Image(std::move(buf));
+}

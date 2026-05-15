@@ -7,11 +7,14 @@
 #include "raw300_decoder/vtx_mqtt_stream_processor.hpp"
 #include "scheduler_center/scheduler_manager.h"
 #include "utils_json_refactor.hpp"
+#include "utils_cv.hpp"
 #include "video_pipeline.hpp"
 #include "video_source.hpp"
 #include "logger.hpp"
 #include <app-window.h>
 #include <filesystem>
+#include <thread>
+#include <chrono>
 
 // ============================================================
 //  Helper: 为组件线程应用调度器配置（亲和度 + 调度策略）
@@ -24,23 +27,77 @@ static void ApplyThreadConfig(T& component, const SchedulerCenterConfig& cfg, in
 }
 
 // ============================================================
-//  URDF 加载
+//  URDF 加载与渲染循环
 // ============================================================
-static std::unique_ptr<drivers::URDFRendererPlugin>
-SetupURDF(const std::filesystem::path& src, const ClientConfig& settings) {
-    LOG_INFO("Setting up URDF from: {}", src.string());
-    auto plugin = std::make_unique<drivers::URDFRendererPlugin>();
-    if (!plugin->initialize(nullptr)) {
-        LOG_ERROR("URDF renderer init failed: {}", plugin->getLastError());
+struct UrdfRenderState {
+    std::unique_ptr<drivers::URDFRendererPlugin> plugin;
+    std::thread render_thread;
+    std::atomic<bool> stop{false};
+};
+
+static void StartUrdfRenderLoop(UrdfRenderState& state, const Callback_Factory& factory) {
+    state.render_thread = std::thread([&]() {
+        int frame_count = 0;
+        while (!state.stop) {
+            if (state.plugin->renderFrame() == drivers::URDF_SUCCESS) {
+                try {
+                    cv::Mat rgba = state.plugin->getImageAsMat();
+                    cv::Mat bgr;
+                    cv::cvtColor(rgba, bgr, cv::COLOR_RGBA2BGR);
+                    if (frame_count == 0) {
+                        LOG_INFO("URDF first frame: {}x{}", bgr.cols, bgr.rows);
+                    }
+                    auto image = MatToSlintImage(bgr);
+                    slint::invoke_from_event_loop([&factory, image]() {
+                        factory.set_urdf_frame(image);
+                    });
+                    ++frame_count;
+                } catch (const std::exception& e) {
+                    LOG_ERROR("URDF render failed: {}", e.what());
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    });
+}
+
+static void StopUrdfRenderLoop(UrdfRenderState& state) {
+    state.stop = true;
+    if (state.render_thread.joinable()) {
+        state.render_thread.join();
+    }
+}
+
+static std::unique_ptr<UrdfRenderState>
+SetupURDF(const std::filesystem::path& src, const ClientConfig& settings,
+          const Callback_Factory& factory) {
+    auto state = std::make_unique<UrdfRenderState>();
+    state->plugin = std::make_unique<drivers::URDFRendererPlugin>();
+    drivers::UrdfRenderConfig cfg;
+    cfg.width = 800;
+    cfg.height = 600;
+    cfg.transparent_background = true;
+    cfg.anti_aliasing = 0;
+    if (!state->plugin->initialize(&cfg)) {
+        LOG_ERROR("URDF renderer init failed: {}", state->plugin->getLastError());
         return nullptr;
     }
     auto urdf_path = src / settings.urdf_path;
-    if (plugin->loadURDF(urdf_path.string()) != drivers::URDF_SUCCESS) {
-        LOG_ERROR("URDF load failed: {} - {}", urdf_path.string(), plugin->getLastError());
+    if (state->plugin->loadURDF(urdf_path.string()) != drivers::URDF_SUCCESS) {
+        LOG_ERROR("URDF load failed: {} - {}", urdf_path.string(), state->plugin->getLastError());
         return nullptr;
     }
     LOG_INFO("URDF loaded: {}", urdf_path.string());
-    return plugin;
+    drivers::UrdfCameraConfig cam;
+    cam.position[0] = -1.0f; cam.position[1] = -0.5f; cam.position[2] = 3.0f;
+    cam.look_at[0] = 0.0f; cam.look_at[1] = 0.0f; cam.look_at[2] = 0.5f;
+    cam.up[0] = 0.0f; cam.up[1] = 0.0f; cam.up[2] = 1.0f;
+    cam.fov_degrees = 50.0f;
+    cam.near_clip = 0.02f;
+    cam.far_clip = 20.0f;
+    state->plugin->setCamera(cam);
+    StartUrdfRenderLoop(*state, factory);
+    return state;
 }
 
 // ============================================================
@@ -133,7 +190,7 @@ int main() {
 
 
     // ── URDF ──
-    // auto urdf = SetupURDF(src, settings);
+    auto urdf = SetupURDF(src, settings, cb);
 
     // ── 调度器 ──
     auto sched_cfg = MakeSchedulerConfig();
@@ -172,4 +229,5 @@ int main() {
     SchedulerManager::GetInstance().Stop();
     if (vtx) vtx->stop();
     mqtt_client.Disconnect();
+    if (urdf) StopUrdfRenderLoop(*urdf);
 }
